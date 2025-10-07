@@ -15,7 +15,7 @@ namespace OneView.Services
                 Directory.CreateDirectory(directory);
             }
         }
-        public void SaveData(Profile profile)
+        public void SaveData(Rideprofile profile)
         {
             using (StreamWriter writer = new StreamWriter(_filePath))
             {
@@ -29,9 +29,9 @@ namespace OneView.Services
             }
 
         }
-        public Profile LoadData()
+        public Rideprofile LoadData()
         {
-            Profile profile = new Profile();
+            Rideprofile profile = new Rideprofile();
             if (!File.Exists(_filePath))
             {
                 return profile;

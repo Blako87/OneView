@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OneView.Models
 {
-    public class Profile
+    public class Rideprofile
     {
         private double _distance=0;
         private TimeOnly _timeOnBike;

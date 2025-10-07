@@ -9,50 +9,53 @@ namespace OneView.Models
     public class Sensordata
     {
         private DateTime _timeUtc = DateTime.UtcNow;
-        private double _lat, _lon, _speedKmh, _headingDeg;
-        private double _inclineAngleDeg, _pitchDeg;
-        private int _batteryPercent;
+        private double _speedKmh;
+        private double _inclineAngleDegLeft, _inclineAngleDegRight;
+        private double _batteryPercent;
+
 
         public DateTime TimeUtc
         {
             get { return _timeUtc; }
             private set { _timeUtc = value; }
         }
-        public double Lat
-        {
-            get { return _lat; }
-            private set { _lat = value; }
-        }
-        public double Lon
-        {
-            get { return _lon; }
-            private set { _lon = value; }
 
-        }
         public double SpeedKmh
         {
-            get { return _speedKmh;}
-            private set { _speedKmh = value;}
+            get { return _speedKmh; }
+            private set { _speedKmh = value; }
         }
-        public double HeadingDeg
-        {
-            get { return _headingDeg; }
-            private set { _headingDeg = value; }
-        }
+
         public double InclineAngleDeg
         {
-            get { return _inclineAngleDeg; }
-            private set { _inclineAngleDeg = value; }
+            get { return _inclineAngleDegLeft; }
+            private set { _inclineAngleDegLeft = value; }
         }
         public double PitchDeg
         {
-            get { return _pitchDeg; }
-            private set { _pitchDeg = value; }
+            get { return _inclineAngleDegRight; }
+            private set { _inclineAngleDegRight = value; }
         }
-        public int BatteryPercent
+        public double BatteryPercent
         {
             get { return _batteryPercent; }
             private set { _batteryPercent = value; }
         }
+        public void UpdateBattery(double batteryLevel)
+        {
+            _batteryPercent = batteryLevel;
+
+        }
+        public void UpdateInclineAngle(double left, double right)
+        {
+            _inclineAngleDegLeft = left;
+            _inclineAngleDegRight = right;
+        }
+        public void UpdateGps(double speed)
+        {
+            _speedKmh = speed;
+        }
+
     }
+
 }

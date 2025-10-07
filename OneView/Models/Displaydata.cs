@@ -10,10 +10,13 @@ namespace OneView.Models
     {
         public double SpeedKmh { get; set; }
         public double InclineAngleDeg { get; set; }
-        public int BatteryPercent { get; set; }
+        public double BatteryPercent { get; set; }
         public double TripDistanceKm { get; set; }
         public TimeOnly TimeOnBike { get; set; }
 
-
+        public void BatteryPercentage(double batteryLevel)
+        {
+            BatteryPercent = batteryLevel;
+        }
     }
 }
