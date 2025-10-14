@@ -8,7 +8,7 @@ namespace OneView
 {
     public partial class App : Application
     {
-        public static SensorService SensorService { get; private set; }
+        public static SensorService SensorService { get; private set; }= null!;
         public App()
         {
             InitializeComponent();

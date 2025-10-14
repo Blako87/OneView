@@ -10,7 +10,7 @@ namespace OneView.Services
         {
             _filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OneView", "profiledata.txt");
             var directory = Path.GetDirectoryName(_filePath);
-            if (!Directory.Exists(directory))
+            if (!string.IsNullOrEmpty(directory) &&!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
@@ -41,7 +41,7 @@ namespace OneView.Services
                 profile.Distance = double.Parse(reader.ReadLine() ?? "0");
                 profile.MinInclineAngle = double.Parse(reader.ReadLine() ?? "0");
                 profile.MaxInclineAngle = double.Parse(reader.ReadLine() ?? "0");
-                profile.TimeOnBike = TimeOnly.Parse(reader.ReadLine() ?? "00:00:00");
+                profile.TimeOnBike = TimeSpan.Parse(reader.ReadLine() ?? "00:00:00");
                 profile.MediumSpeed = double.Parse(reader.ReadLine() ?? "0");
                 profile.MaxSpeed = double.Parse(reader.ReadLine() ?? "0");
             }

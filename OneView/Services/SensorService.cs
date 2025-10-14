@@ -20,8 +20,7 @@ namespace OneView.Services
 
             if (!_isBatteryWatched)
             {
-                double currentLevel = Battery.Default.ChargeLevel * 100;
-                _currentSensorData.UpdateBattery(currentLevel);
+
                 Battery.Default.BatteryInfoChanged += Battery_BatteryInfoChanged;
                 _isBatteryWatched = true;
             }
@@ -32,13 +31,15 @@ namespace OneView.Services
             if (_isBatteryWatched)
             {
                 Battery.Default.BatteryInfoChanged -= Battery_BatteryInfoChanged;
+                
                 _isBatteryWatched = false;
             }
         }
 
-        private void Battery_BatteryInfoChanged(object sender, BatteryInfoChangedEventArgs e)
+        private void Battery_BatteryInfoChanged(object? sender, BatteryInfoChangedEventArgs e)
         {
-            _currentSensorData.UpdateBattery(e.ChargeLevel * 100);
+            double currentLevel = e.ChargeLevel * 100;
+            _currentSensorData.UpdateBattery(currentLevel);
         }
 
         private bool _isAccelerometerWatched = false;
@@ -50,12 +51,12 @@ namespace OneView.Services
         {
             if (!_isAccelerometerWatched)
             {
-               
+
                 if (Accelerometer.Default.IsSupported)
                 {
                     Accelerometer.Default.ReadingChanged += Accelerometer_ReadingChanged;
                     Accelerometer.Default.Start(SensorSpeed.UI);
-                    _currentSensorData.UpdateInclineAngle(leftIncline, rightIncline);
+                   
                     _isAccelerometerWatched = true;
                 }
 
@@ -72,7 +73,7 @@ namespace OneView.Services
             }
 
         }
-        private void Accelerometer_ReadingChanged(object sender, AccelerometerChangedEventArgs e)
+        private void Accelerometer_ReadingChanged(object? sender, AccelerometerChangedEventArgs e)
         {
             var data = e.Reading;
             double x = data.Acceleration.X;
@@ -92,7 +93,7 @@ namespace OneView.Services
             _currentSensorData.UpdateInclineAngle(leftIncline, rightIncline);
 
         }
-        
+
         public async Task StartWatchingGps()
         {
             var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();

@@ -12,7 +12,7 @@ namespace OneView.Models
         private double _speedKmh;
         private double _inclineAngleDegLeft, _inclineAngleDegRight;
         private double _batteryPercent;
-
+        public Rideprofile _rideprofile = new Rideprofile();
 
         public DateTime TimeUtc
         {
@@ -41,6 +41,7 @@ namespace OneView.Models
             get { return _batteryPercent; }
             private set { _batteryPercent = value; }
         }
+        // This All Methods will be started on App start and stop on App close
         public void UpdateBattery(double batteryLevel)
         {
             _batteryPercent = batteryLevel;
@@ -51,9 +52,12 @@ namespace OneView.Models
             _inclineAngleDegLeft = left;
             _inclineAngleDegRight = right;
         }
+       
         public void UpdateGps(double speed)
         {
             _speedKmh = speed;
+            _rideprofile.AktuallSpeed(_speedKmh);
+
         }
 
     }
