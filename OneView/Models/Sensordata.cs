@@ -12,7 +12,7 @@ namespace OneView.Models
         private double _speedKmh;
         private double _inclineAngleDegLeft, _inclineAngleDegRight;
         private double _batteryPercent;
-        public Rideprofile _rideprofile = new Rideprofile();
+
 
         public DateTime TimeUtc
         {
@@ -52,11 +52,10 @@ namespace OneView.Models
             _inclineAngleDegLeft = left;
             _inclineAngleDegRight = right;
         }
-       
+
         public void UpdateGps(double speed)
         {
             _speedKmh = speed;
-            _rideprofile.AktuallSpeed(_speedKmh);
 
         }
 
