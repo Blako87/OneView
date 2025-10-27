@@ -15,8 +15,10 @@ namespace OneView.Models
         private DateTime _lastTime = DateTime.Now;
         private double _mediumSpeed;
         private double _maxSpeed;
-        private double _minInclineAngle;
-        private double _maxInclineAngle;
+        private double _minInclineAngleLeft;
+        private double _maxInclineAngleLeft;
+        private double _minInclineAngleRight;
+        private double _maxInclineAngleRight;
         private System.Timers.Timer? _ticks;
         private double _speed;
         public System.Timers.Timer? Ticks
@@ -55,16 +57,25 @@ namespace OneView.Models
             get { return _maxSpeed; }
             set { _maxSpeed = value; }
         }
-        public double MinInclineAngle
+        public double MinInclineAngleLeft
         {
-            get { return _minInclineAngle; }
-            set { _minInclineAngle = value; }
+            get { return _minInclineAngleLeft; }
+            set { _minInclineAngleLeft = value; }
         }
-        public double MaxInclineAngle
+        public double MaxInclineAngleLeft
         {
-            get { return _maxInclineAngle; }
-            set { _maxInclineAngle = value; }
+            get { return _maxInclineAngleLeft; }
+            set { _maxInclineAngleLeft = value; }
         }
-
+        public double MinInclineAngleRight
+        {
+            get { return _minInclineAngleRight; }
+            set { _minInclineAngleRight = value; }
+        }
+        public double MaxInclineAngleRight
+        {
+            get { return _maxInclineAngleRight; }
+            set { _maxInclineAngleRight = value; }
+        }
     }
 }

@@ -10,7 +10,8 @@ namespace OneView.Models
     {
         private DateTime _timeUtc = DateTime.UtcNow;
         private double _speedKmh;
-        private double _inclineAngleDegLeft, _inclineAngleDegRight;
+        private double _inclineAngleDegLeft;
+        private double _inclineAngleDegRight;
         private double _batteryPercent;
 
 
@@ -26,12 +27,12 @@ namespace OneView.Models
             private set { _speedKmh = value; }
         }
 
-        public double InclineAngleDeg
+        public double InclineAngleDegLeft
         {
             get { return _inclineAngleDegLeft; }
             private set { _inclineAngleDegLeft = value; }
         }
-        public double PitchDeg
+        public double InclineAngleDegRight
         {
             get { return _inclineAngleDegRight; }
             private set { _inclineAngleDegRight = value; }
