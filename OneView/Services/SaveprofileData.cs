@@ -1,51 +1,73 @@
-﻿using System.IO;
+﻿using System.Text.Json;
 using OneView.Models;
 
 namespace OneView.Services
 {
     public class SaveprofileData
     {
-        private readonly string _filePath;
+        private readonly string _rideProfilePath;
+        private readonly string _userProfilePath;
+        private readonly string _loginDataPath;
         public SaveprofileData()
         {
-            _filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OneView", "profiledata.txt");
-            var directory = Path.GetDirectoryName(_filePath);
+            var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OneView" );
+            
             if (!string.IsNullOrEmpty(directory) &&!Directory.Exists(directory))
             {
-                Directory.CreateDirectory(directory);
+               _ = Directory.CreateDirectory(directory);
             }
+            _rideProfilePath = Path.Combine(directory, "rideprofile.json");
+            _userProfilePath = Path.Combine(directory, "userprofile.json");
+            _loginDataPath = Path.Combine(directory, "logindata.json");
         }
-        public void SaveData(Rideprofile profile)
+        public void SaveLoginData(Login logData)
         {
-            using (StreamWriter writer = new StreamWriter(_filePath))
+            string jsonString = JsonSerializer.Serialize(logData);
+            File.WriteAllText(_loginDataPath, jsonString);
+        }
+        public void SaveRideData(Rideprofile profile)
+        {
+            string jsonString = JsonSerializer.Serialize(profile);
+            File.WriteAllText(_rideProfilePath, jsonString);
+        }
+        public void SaveUserData(User user)
+        {
+            string JsonString = JsonSerializer.Serialize(user);
+            File.WriteAllText(_userProfilePath, JsonString);
+        }
+        public Login LoadLoginData()
+        {
+            Login logData = new();
+            if (!File.Exists(_loginDataPath))
             {
-                writer.WriteLine(profile.Distance);
-                writer.WriteLine(profile.MinInclineAngle);
-                writer.WriteLine(profile.MaxInclineAngle);
-                writer.WriteLine(profile.TimeOnBike);
-                writer.WriteLine(profile.MediumSpeed);
-                writer.WriteLine(profile.MaxSpeed);
-                
+                return logData;
             }
-
+            string jsonString = File.ReadAllText(_loginDataPath);
+            logData = JsonSerializer.Deserialize<Login>(jsonString)!;
+            return logData;
         }
-        public Rideprofile LoadData()
+        public Rideprofile LoadRideData()
         {
-            Rideprofile profile = new Rideprofile();
-            if (!File.Exists(_filePath))
+            Rideprofile profile = new();
+            if (!File.Exists(_rideProfilePath))
             {
                 return profile;
             }
-            using (StreamReader reader = new StreamReader(_filePath))
-            {
-                profile.Distance = double.Parse(reader.ReadLine() ?? "0");
-                profile.MinInclineAngle = double.Parse(reader.ReadLine() ?? "0");
-                profile.MaxInclineAngle = double.Parse(reader.ReadLine() ?? "0");
-                profile.TimeOnBike = TimeSpan.Parse(reader.ReadLine() ?? "00:00:00");
-                profile.MediumSpeed = double.Parse(reader.ReadLine() ?? "0");
-                profile.MaxSpeed = double.Parse(reader.ReadLine() ?? "0");
-            }
+            string JsonString = File.ReadAllText(_rideProfilePath);
+            profile = JsonSerializer.Deserialize<Rideprofile>(JsonString)!;
+           
             return profile;
+        }
+        public User LoadUserData()
+        {
+            User userData = new();
+            if (!File.Exists(_userProfilePath))
+            {
+                return userData;
+            }
+            string jsonString = File.ReadAllText(_userProfilePath);
+            userData = JsonSerializer.Deserialize<User>(jsonString)!;
+            return userData;
         }
 
     }
