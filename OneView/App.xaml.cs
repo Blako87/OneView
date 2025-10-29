@@ -13,22 +13,26 @@ namespace OneView
         {
             InitializeComponent();
             SensorService = new SensorService();
-
-            MainPage = new MainPage();
-            
         }
+
+        protected override Window CreateWindow(IActivationState? activationState)
+        {
+            var window = base.CreateWindow(activationState);
+            window.Page = new MainPage();
+            return window;
+        }
+
         protected override void OnSleep()
         {
-                base.OnSleep();
-                SensorService.StopWatchingBattery();
-                SensorService.StopAccelerometer();
+            base.OnSleep();
+            SensorService.StopWatchingBattery();
+            SensorService.StopAccelerometer();
         }
         protected override void OnResume()
         {
-                base.OnResume();
-                SensorService.StartWatchingBattery();
-                SensorService.StartAccelerometer();
+            base.OnResume();
+            SensorService.StartWatchingBattery();
+            SensorService.StartAccelerometer();
         }
-      
     }
 }

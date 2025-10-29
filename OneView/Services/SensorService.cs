@@ -1,4 +1,4 @@
-﻿
+﻿using Microsoft.Maui.Devices.Sensors;
 
 using OneView.Models;
 
@@ -7,9 +7,9 @@ namespace OneView.Services
 {
     public class SensorService
     {
-        public Sensordata _currentSensorData = new Sensordata();
+        private readonly Sensordata _currentSensorData = new();
 
-        private bool _isBatteryWatched = false;
+        private bool _isBatteryWatched;
 
         public void StartWatchingBattery()
         {
@@ -39,9 +39,9 @@ namespace OneView.Services
         }
 
         private bool _isAccelerometerWatched = false;
-        double lastRoll;
-        double leftIncline;
-        double rightIncline;
+        private double lastRoll;
+        private double leftIncline;
+        private double rightIncline;
 
         public void StartAccelerometer()
         {

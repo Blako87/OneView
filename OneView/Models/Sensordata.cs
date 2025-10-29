@@ -41,18 +41,18 @@ namespace OneView.Models
         // This All Methods will be started on App start and stop on App close
         public void UpdateBattery(double batteryLevel)
         {
-            _batteryPercent = batteryLevel;
+            BatteryPercent = batteryLevel;
 
         }
         public void UpdateInclineAngle(double left, double right)
         {
-            _inclineAngleDegLeft = left;
-            _inclineAngleDegRight = right;
+            InclineAngleDegLeft = left;
+            InclineAngleDegRight = right;
         }
 
         public void UpdateGps(double speed)
         {
-            _speedKmh = speed;
+            SpeedKmh = speed;
 
         }
 
