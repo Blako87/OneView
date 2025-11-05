@@ -1,14 +1,15 @@
-﻿using Microsoft.Maui.Controls;
-using OneView.Services;
+﻿using OneView.Services;
+using OneView.Models;
+using Plugin.BLE.Abstractions.Contracts;
 
-#if ANDROID
-using Android.OS.Strictmode;
-#endif
 namespace OneView
 {
     public partial class App : Application
     {
-        public static SensorService SensorService { get; private set; }= null!;
+        public static SensorService SensorService { get; private set; } = null!;
+        private readonly Sensordata Sensordata = new();
+        public static BluetoothService BluetoothService { get; set; } = new BluetoothService();
+        private readonly bool _isActive = BluetoothService.IsBlueetoothAvailabale();
         public App()
         {
             InitializeComponent();
@@ -27,12 +28,40 @@ namespace OneView
             base.OnSleep();
             SensorService.StopWatchingBattery();
             SensorService.StopAccelerometer();
+            BluetoothService.DisconnectHelmet();
         }
-        protected override void OnResume()
+        protected override async void OnResume()
         {
             base.OnResume();
             SensorService.StartWatchingBattery();
             SensorService.StartAccelerometer();
+            List<IDevice> devices = await BluetoothService.ScanForHelmets();
+            if(devices != null)
+            {
+                await BluetoothService.ConnectToHelmet(devices[0]);
+                await BluetoothService.SendDataToHelmet(Sensordata.SpeedKmh, Sensordata.InclineAngleDegLeft, Sensordata.InclineAngleDegRight, Sensordata.BatteryPercent);
+            }
+            
+
+        }
+        protected override async void OnStart()
+        {
+            base.OnStart();
+            if (_isActive)
+            {
+
+                List<IDevice> devices = await BluetoothService.ScanForHelmets();
+                if (devices != null)
+                {
+                    await BluetoothService.ConnectToHelmet(devices[0]);
+                    await BluetoothService.SendDataToHelmet(Sensordata.SpeedKmh, Sensordata.InclineAngleDegLeft, Sensordata.InclineAngleDegRight, Sensordata.BatteryPercent);
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Turn your Bluetooth On.");
+            }
+
         }
     }
 }

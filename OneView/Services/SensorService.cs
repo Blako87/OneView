@@ -34,14 +34,14 @@ namespace OneView.Services
 
         private void Battery_BatteryInfoChanged(object? sender, BatteryInfoChangedEventArgs e)
         {
-            double currentLevel = e.ChargeLevel * 100;
+            float currentLevel = (float)(e.ChargeLevel * 100);
             _currentSensorData.UpdateBattery(currentLevel);
         }
 
         private bool _isAccelerometerWatched = false;
-        private double lastRoll;
-        private double leftIncline;
-        private double rightIncline;
+        private float lastRoll;
+        private float leftIncline;
+        private float rightIncline;
 
         public void StartAccelerometer()
         {
@@ -72,11 +72,11 @@ namespace OneView.Services
         private void Accelerometer_ReadingChanged(object? sender, AccelerometerChangedEventArgs e)
         {
             var data = e.Reading;
-            double x = data.Acceleration.X;
-            double y = data.Acceleration.Y;
-            double z = data.Acceleration.Z;
-            double roll = Math.Atan2(y, z) * 180 / Math.PI;
-            double delta = roll - lastRoll;
+            float x = data.Acceleration.X;
+            float y = data.Acceleration.Y;
+            float z = data.Acceleration.Z;
+            float roll = (float)(Math.Atan2(y, z) * 180 / Math.PI);
+            float delta = roll - lastRoll;
             if (delta > 0)
             {
                 rightIncline += delta;
@@ -109,7 +109,7 @@ namespace OneView.Services
         {
             if (e.Location.Speed.HasValue)
             {
-                double speedKmh = e.Location.Speed.Value * 3.6; // Convert m/s to km/h
+                float speedKmh = (float)(e.Location.Speed.Value * 3.6); // Convert m/s to km/h
                 _currentSensorData.UpdateGps(speedKmh);
             }
         }

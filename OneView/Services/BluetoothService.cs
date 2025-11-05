@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Diagnostics.Contracts;
 using Plugin.BLE;
 using Plugin.BLE.Abstractions.Contracts;
 using Plugin.BLE.Abstractions.EventArgs;
@@ -8,16 +9,33 @@ namespace OneView.Services
     public class BluetoothService
     {
         private readonly IAdapter? _adapter;
-        private readonly IDevice? _helmethDevice;
+        private readonly IBluetoothLE _ble;
         private ICharacteristic? _helmetCharacteristic;
+        private IDevice? _conectedHelmetDevice;
+
 
         public BluetoothService()
         {
             _adapter = CrossBluetoothLE.Current.Adapter;
+            _ble = CrossBluetoothLE.Current;
         }
+        public bool IsBlueetoothAvailabale()
+        {
+            return _ble.State == BluetoothState.On;
+        }
+        public void DisconnectHelmet()
+        {
+            if (_conectedHelmetDevice != null && _adapter != null)
+            {
+                // Await the asynchronous disconnect to ensure the expression value is used
+                _adapter.DisconnectDeviceAsync(_conectedHelmetDevice, CancellationToken.None).GetAwaiter().GetResult();
+            }
+
+        }
+
         public async Task<List<IDevice>> ScanForHelmets()
         {
-            List<IDevice> devices = new List<IDevice>();
+            List<IDevice> devices = new();
 
 
 
@@ -53,8 +71,9 @@ namespace OneView.Services
             }
 
             await _adapter.ConnectToDeviceAsync(device);
+            _conectedHelmetDevice = device;
 
-            var services = await device.GetServicesAsync(); 
+            var services = await device.GetServicesAsync();
 
             foreach (var service in services)
             {
@@ -73,12 +92,15 @@ namespace OneView.Services
 
         public async Task SendDataToHelmet(float speed, float leftAngle, float rightAngle, float battery)
         {
-            if (_helmetCharacteristic is null) return;
+            if (_helmetCharacteristic is null)
+            {
+                return;
+            }
 
             byte[] data = new byte[16];
-            BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(0),  speed);
-            BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(4),  leftAngle);
-            BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(8),  rightAngle);
+            BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(0), speed);
+            BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(4), leftAngle);
+            BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(8), rightAngle);
             BinaryPrimitives.WriteSingleLittleEndian(data.AsSpan(12), battery);
 
             await _helmetCharacteristic.WriteAsync(data);
