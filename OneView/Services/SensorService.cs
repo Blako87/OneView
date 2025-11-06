@@ -1,13 +1,11 @@
 ﻿using Microsoft.Maui.Devices.Sensors;
-
 using OneView.Models;
-
 
 namespace OneView.Services
 {
     public class SensorService
     {
-        private readonly Sensordata _currentSensorData = new();
+        public Sensordata CurrentSensorData { get; private set; } = new();
 
         private bool _isBatteryWatched;
 
@@ -27,7 +25,6 @@ namespace OneView.Services
             if (_isBatteryWatched)
             {
                 Battery.Default.BatteryInfoChanged -= Battery_BatteryInfoChanged;
-                
                 _isBatteryWatched = false;
             }
         }
@@ -35,7 +32,7 @@ namespace OneView.Services
         private void Battery_BatteryInfoChanged(object? sender, BatteryInfoChangedEventArgs e)
         {
             float currentLevel = (float)(e.ChargeLevel * 100);
-            _currentSensorData.UpdateBattery(currentLevel);
+            CurrentSensorData.UpdateBattery(currentLevel);
         }
 
         private bool _isAccelerometerWatched = false;
@@ -52,7 +49,6 @@ namespace OneView.Services
                 {
                     Accelerometer.Default.ReadingChanged += Accelerometer_ReadingChanged;
                     Accelerometer.Default.Start(SensorSpeed.UI);
-                   
                     _isAccelerometerWatched = true;
                 }
 
@@ -76,17 +72,19 @@ namespace OneView.Services
             float y = data.Acceleration.Y;
             float z = data.Acceleration.Z;
             float roll = (float)(Math.Atan2(y, z) * 180 / Math.PI);
-            float delta = roll - lastRoll;
+            float delta = roll; ;
             if (delta > 0)
             {
-                rightIncline += delta;
+                rightIncline = delta;
+                leftIncline = 0;
             }
-            else if (delta < 0)
+            else 
             {
-                leftIncline -= delta;
+                leftIncline = Math.Abs(delta);
+                rightIncline = 0;
             }
             lastRoll = roll;
-            _currentSensorData.UpdateInclineAngle(leftIncline, rightIncline);
+            CurrentSensorData.UpdateInclineAngle(leftIncline, rightIncline);
 
         }
 
@@ -110,7 +108,7 @@ namespace OneView.Services
             if (e.Location.Speed.HasValue)
             {
                 float speedKmh = (float)(e.Location.Speed.Value * 3.6); // Convert m/s to km/h
-                _currentSensorData.UpdateGps(speedKmh);
+                CurrentSensorData.UpdateGps(speedKmh);
             }
         }
 
@@ -119,6 +117,5 @@ namespace OneView.Services
             StopWatchingBattery();
             StopAccelerometer();
         }
-
     }
 }
