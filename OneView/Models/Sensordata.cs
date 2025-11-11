@@ -17,25 +17,25 @@
         public float SpeedKmh
         {
             get { return _speedKmh; }
-            set { _speedKmh = value; }
+            private set { _speedKmh = value; }
         }
 
         public float InclineAngleDegLeft
         {
             get { return _inclineAngleDegLeft; }
-            set { _inclineAngleDegLeft = value; }
+            private set { _inclineAngleDegLeft = value; }
         }
 
         public float InclineAngleDegRight
         {
             get { return _inclineAngleDegRight; }
-            set { _inclineAngleDegRight = value; }
+            private set { _inclineAngleDegRight = value; }
         }
 
         public float BatteryPercent
         {
             get { return _batteryPercent; }
-            set { _batteryPercent = value; }
+            private set { _batteryPercent = value; }
         }
 
         public void UpdateBattery(float batteryLevel)

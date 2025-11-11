@@ -59,6 +59,7 @@ namespace OneView
             StopDataSending();
             SensorService.StopWatchingBattery();
             SensorService.StopAccelerometer();
+            App.SensorService.StopWatchingGps();
 
             // Fire and forget - don't block the UI thread
             Task.Run(async () =>
@@ -105,9 +106,19 @@ namespace OneView
             // Start sensors immediately
             SensorService.StartWatchingBattery();
             SensorService.StartAccelerometer();
+            await App.SensorService.StartWatchingGps();
 
             // Connect and start sending data
             await ReconnectToHelmetAsync();
+            bool gpsStarted = await SensorService.StartWatchingGps();
+            if (!gpsStarted)
+            {
+                Debug.WriteLine("GPS could not be started");
+            }
+            else
+            {
+                Debug.WriteLine("GPS started successfully");
+            }
         }
 
         private async Task ReconnectToHelmetAsync()

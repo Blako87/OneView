@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Diagnostics;
 using OneView.Models;
 
 namespace OneView.Services
@@ -8,67 +9,208 @@ namespace OneView.Services
         private readonly string _rideProfilePath;
         private readonly string _userProfilePath;
         private readonly string _loginDataPath;
+        private readonly string _dataDirectory;
+
         public SaveprofileData()
         {
-            var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OneView" );
-            
-            if (!string.IsNullOrEmpty(directory) &&!Directory.Exists(directory))
+            _dataDirectory = FileSystem.AppDataDirectory;
+            _rideProfilePath = Path.Combine(_dataDirectory, "rideprofile.json");
+            _userProfilePath = Path.Combine(_dataDirectory, "userprofile.json");
+            _loginDataPath = Path.Combine(_dataDirectory, "logindata.json");
+
+            // Ensure data directory exists
+            try
             {
-               _ = Directory.CreateDirectory(directory);
+                if (!Directory.Exists(_dataDirectory))
+                {
+                    Directory.CreateDirectory(_dataDirectory);
+                    Debug.WriteLine($"✅ Created data directory: {_dataDirectory}");
+                }
             }
-            _rideProfilePath = Path.Combine(directory, "rideprofile.json");
-            _userProfilePath = Path.Combine(directory, "userprofile.json");
-            _loginDataPath = Path.Combine(directory, "logindata.json");
-        }
-        public void SaveLoginData(Login logData)
-        {
-            string jsonString = JsonSerializer.Serialize(logData);
-            File.WriteAllText(_loginDataPath, jsonString);
-        }
-        public void SaveRideData(Rideprofile profile)
-        {
-            string jsonString = JsonSerializer.Serialize(profile);
-            File.WriteAllText(_rideProfilePath, jsonString);
-        }
-        public void SaveUserData(User user)
-        {
-            string JsonString = JsonSerializer.Serialize(user);
-            File.WriteAllText(_userProfilePath, JsonString);
-        }
-        public Login LoadLoginData()
-        {
-            Login logData = new();
-            if (!File.Exists(_loginDataPath))
+            catch (Exception ex)
             {
-                return logData;
+                Debug.WriteLine($"❌ Failed to create data directory: {ex.Message}");
             }
-            string jsonString = File.ReadAllText(_loginDataPath);
-            logData = JsonSerializer.Deserialize<Login>(jsonString)!;
-            return logData;
-        }
-        public Rideprofile LoadRideData()
-        {
-            Rideprofile profile = new();
-            if (!File.Exists(_rideProfilePath))
-            {
-                return profile;
-            }
-            string JsonString = File.ReadAllText(_rideProfilePath);
-            profile = JsonSerializer.Deserialize<Rideprofile>(JsonString)!;
-           
-            return profile;
-        }
-        public User LoadUserData()
-        {
-            User userData = new();
-            if (!File.Exists(_userProfilePath))
-            {
-                return userData;
-            }
-            string jsonString = File.ReadAllText(_userProfilePath);
-            userData = JsonSerializer.Deserialize<User>(jsonString)!;
-            return userData;
         }
 
+        public bool SaveLoginData(Login logData)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(logData, options);
+                File.WriteAllText(_loginDataPath, jsonString);
+                Debug.WriteLine($"✅ Login data saved to: {_loginDataPath}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to save login data: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool SaveRideData(Rideprofile profile)
+        {
+            try
+            {
+                // Create options to ignore non-serializable properties
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    IgnoreReadOnlyProperties = false
+                };
+
+                string jsonString = JsonSerializer.Serialize(profile, options);
+                File.WriteAllText(_rideProfilePath, jsonString);
+                Debug.WriteLine($"✅ Ride data saved to: {_rideProfilePath}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to save ride data: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool SaveUserData(User user)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(user, options);
+                File.WriteAllText(_userProfilePath, jsonString);
+                Debug.WriteLine($"✅ User data saved to: {_userProfilePath}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to save user data: {ex.Message}");
+                return false;
+            }
+        }
+
+        public Login? LoadLoginData()
+        {
+            try
+            {
+                if (!File.Exists(_loginDataPath))
+                {
+                    Debug.WriteLine($"⚠️ Login data file not found: {_loginDataPath}");
+                    return new Login();
+                }
+
+                string jsonString = File.ReadAllText(_loginDataPath);
+
+                if (string.IsNullOrWhiteSpace(jsonString))
+                {
+                    Debug.WriteLine("⚠️ Login data file is empty");
+                    return new Login();
+                }
+
+                var logData = JsonSerializer.Deserialize<Login>(jsonString);
+                Debug.WriteLine($"✅ Login data loaded from: {_loginDataPath}");
+                return logData ?? new Login();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to load login data: {ex.Message}");
+                return new Login();
+            }
+        }
+
+        public Rideprofile? LoadRideData()
+        {
+            try
+            {
+                if (!File.Exists(_rideProfilePath))
+                {
+                    Debug.WriteLine($"⚠️ Ride profile file not found: {_rideProfilePath}");
+                    return new Rideprofile();
+                }
+
+                string jsonString = File.ReadAllText(_rideProfilePath);
+
+                if (string.IsNullOrWhiteSpace(jsonString))
+                {
+                    Debug.WriteLine("⚠️ Ride profile file is empty");
+                    return new Rideprofile();
+                }
+
+                var profile = JsonSerializer.Deserialize<Rideprofile>(jsonString);
+                Debug.WriteLine($"✅ Ride data loaded from: {_rideProfilePath}");
+                return profile ?? new Rideprofile();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to load ride data: {ex.Message}");
+                return new Rideprofile();
+            }
+        }
+
+        public User? LoadUserData()
+        {
+            try
+            {
+                if (!File.Exists(_userProfilePath))
+                {
+                    Debug.WriteLine($"⚠️ User profile file not found: {_userProfilePath}");
+                    return new User();
+                }
+
+                string jsonString = File.ReadAllText(_userProfilePath);
+
+                if (string.IsNullOrWhiteSpace(jsonString))
+                {
+                    Debug.WriteLine("⚠️ User profile file is empty");
+                    return new User();
+                }
+
+                var userData = JsonSerializer.Deserialize<User>(jsonString);
+                Debug.WriteLine($"✅ User data loaded from: {_userProfilePath}");
+                return userData ?? new User();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to load user data: {ex.Message}");
+                return new User();
+            }
+        }
+
+        /// <summary>
+        /// Deletes all saved profile data files
+        /// </summary>
+        public bool ClearAllData()
+        {
+            bool success = true;
+
+            try
+            {
+                if (File.Exists(_loginDataPath))
+                {
+                    File.Delete(_loginDataPath);
+                    Debug.WriteLine($"✅ Deleted login data: {_loginDataPath}");
+                }
+
+                if (File.Exists(_rideProfilePath))
+                {
+                    File.Delete(_rideProfilePath);
+                    Debug.WriteLine($"✅ Deleted ride data: {_rideProfilePath}");
+                }
+
+                if (File.Exists(_userProfilePath))
+                {
+                    File.Delete(_userProfilePath);
+                    Debug.WriteLine($"✅ Deleted user data: {_userProfilePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Failed to clear data: {ex.Message}");
+                success = false;
+            }
+
+            return success;
+        }
     }
 }

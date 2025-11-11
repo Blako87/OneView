@@ -5,7 +5,7 @@ namespace OneView.Services
 {
     public class ProfileService
     {
-        public Rideprofile _rideprofile = new();
+        public Rideprofile _rideprofile { get; private set; } = new();
         private readonly Sensordata _sensordata = new();
 
 

@@ -15,17 +15,19 @@ namespace OneView.Models
         public string FirstName
         {
             get { return _firstName; }
-            private set { _firstName = value; }
+            set { _firstName = value; }  // Changed to public setter for JSON serialization
         }
+
         public string LastName
         {
             get { return _lastName; }
-            private set { _lastName = value; }
+            set { _lastName = value; }  // Changed to public setter for JSON serialization
         }
+
         public string NickName
         {
             get { return _nickName; }
-            private set { _nickName = value; }
+            set { _nickName = value; }  // Changed to public setter for JSON serialization
         }
     }
 }

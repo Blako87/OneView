@@ -1,6 +1,4 @@
-﻿
-
-namespace OneView.Models
+﻿namespace OneView.Models
 {
     public class Login
     {
@@ -12,24 +10,19 @@ namespace OneView.Models
         public string Username
         {
             get { return _username; }
-            private set { _username = value; }
+            set { _username = value; }  // Changed to public setter for JSON serialization
         }
+
         public string Password
         {
             get { return _password; }
-            private set { _password = value; }
+            set { _password = value; }  // Changed to public setter for JSON serialization
         }
 
         public string Email
         {
             get { return _email; }
-            private set { _email = value; }
-
+            set { _email = value; }  // Changed to public setter for JSON serialization
         }
-
-
-
-
-
     }
 }

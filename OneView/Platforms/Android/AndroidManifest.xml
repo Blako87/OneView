@@ -15,8 +15,9 @@
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
 	<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" android:maxSdkVersion="30" />
 	<uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+	<uses-permission android:name="android.permission.BATTERY_STATS" />
 	<!-- Optional cleanup: BLUETOOTH_PRIVILEGED is system-only; remove to avoid warnings -->
 	<!-- <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" /> -->
 	<!-- Optional: declare BLE feature if you want Play Store/device filtering -->
-	<uses-feature android:name="android.hardware.bluetooth_le" android:required="false" /> 
+	<uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
 </manifest>
