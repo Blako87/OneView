@@ -78,7 +78,7 @@
                     </div>
                     <div class="stat-item small">
                         <div class="stat-icon">??</div>
-                        <div class="stat-content">
+                            <div class="stat-content">
                             <div class="stat-label">Incline R Max</div>
                             <div class="stat-value">@rideInclineRightMax °</div>
                         </div>
@@ -104,8 +104,62 @@
                         <div class="btn-glow"></div>
                     </button>
                 }
+
+                <!-- New: Load Saved Ride button -->
+                <button class="btn-secondary" @onclick="LoadAndShowSavedRide">
+                    <span class="btn-icon">??</span>
+                    LOAD SAVED RIDE
+                </button>
             </div>
         </div>
+
+        @if (showLoadedRide && loadedRide is not null)
+        {
+            <div class="loaded-card">
+                <div class="loaded-header">
+                    <div class="loaded-title">
+                        <span class="title-icon">??</span>
+                        Loaded Ride — @loadedRide.DisplayDate
+                    </div>
+                    <button class="btn-secondary compact" @onclick="HideLoadedRide">HIDE</button>
+                </div>
+
+                <div class="loaded-grid">
+                    <div class="loaded-metric">
+                        <div class="metric-label">Distance</div>
+                        <div class="metric-value">@loadedRide.DisplayDistance</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Duration</div>
+                        <div class="metric-value">@loadedRide.DisplayDuration</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Avg Speed</div>
+                        <div class="metric-value">@loadedRide.DisplayAvgSpeed</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Max Speed</div>
+                        <div class="metric-value">@loadedRide.DisplayMaxSpeed</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Left Avg</div>
+                        <div class="metric-value">@loadedRide.DisplayAvgInclineLeft</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Left Max</div>
+                        <div class="metric-value">@loadedRide.DisplayMaxInclineLeft</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Right Avg</div>
+                        <div class="metric-value">@loadedRide.DisplayAvgInclineRight</div>
+                    </div>
+                    <div class="loaded-metric">
+                        <div class="metric-label">Right Max</div>
+                        <div class="metric-value">@loadedRide.DisplayMaxInclineRight</div>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
     <!-- Rides History -->
@@ -240,6 +294,10 @@
     private string rideInclineRightMax = "0.0";
     private System.Timers.Timer? rideTimer;
 
+    // New: loaded ride panel state
+    private bool showLoadedRide = false;
+    private RideHistoryItem? loadedRide;
+
     protected override void OnInitialized()
     {
         LoadRides();
@@ -282,6 +340,39 @@
         {
             System.Diagnostics.Debug.WriteLine($"Error loading rides: {ex.Message}");
         }
+    }
+
+    private async Task LoadAndShowSavedRide()
+    {
+        showLoadedRide = false;
+        loadedRide = null;
+
+        var profile = App.ProfileService.LoadRideData();
+        if (profile != null && profile.Distance > 0)
+        {
+            loadedRide = new RideHistoryItem
+            {
+                Date = profile.LastTime,
+                Distance = profile.Distance,
+                Duration = profile.TimeOnBike,
+                AverageSpeed = profile.MediumSpeed,
+                MaxSpeed = profile.MaxSpeed,
+                MinInclineLeft = profile.MinInclineAngleLeft,
+                MaxInclineLeft = profile.MaxInclineAngleLeft,
+                MinInclineRight = profile.MinInclineAngleRight,
+                MaxInclineRight = profile.MaxInclineAngleRight
+            };
+            showLoadedRide = true;
+        }
+
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private void HideLoadedRide()
+    {
+        showLoadedRide = false;
+        loadedRide = null;
     }
 
     private void StartRide()
@@ -469,6 +560,17 @@
     .stat-icon { font-size: 1.4rem; }
     .stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px; }
     .stat-value { font-size: 1rem; font-weight: 700; color: #00ff88; font-family: 'Courier New', monospace; }
+
+    /* Loaded Ride Card */
+    .loaded-card { margin-top: 16px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 16px; }
+    .loaded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .loaded-title { color: #fff; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    .loaded-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .loaded-metric { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; }
+    .loaded-metric .metric-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px; }
+    .loaded-metric .metric-value { font-size: 1rem; font-weight: 700; color: #fff; font-family: 'Courier New', monospace; }
+
+    .compact { padding: 8px 12px; font-size: 0.8rem; border-radius: 10px; }
 
     /* Action Buttons */
     .action-buttons { display: flex; gap: 14px; }
