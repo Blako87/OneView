@@ -74,17 +74,17 @@ namespace OneView
             ProfileService = new ProfileService();
             LoginService = new LoginService();
             
-            // Use AppShell for navigation (Blazor handles internal routing)
-            MainPage = new AppShell();
+            // Use MainPage for Blazor hosting
+            MainPage = new MainPage();
 
             // Setup timer for periodic Bluetooth data transmission
             SetupDataSendTimer();
             
             // Try to restore previous login session from disk
             bool wasLoggedIn = LoginService.LoadLogin();
-            Debug.WriteLine($"Login restored: {wasLoggedIn}");
+            Debug.WriteLine($"✅ App initialized. Login restored: {wasLoggedIn}");
             
-            // Blazor routing will handle navigation to login or home page
+            // Blazor routing will handle navigation to login or home page based on isLoggedIn
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace OneView
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error sending data: {ex.Message}");
+                Debug.WriteLine($"❌ Error sending data: {ex.Message}");
             }
         }
 
@@ -145,6 +145,8 @@ namespace OneView
         protected override void OnSleep()
         {
             base.OnSleep();
+            
+            Debug.WriteLine("🌙 App sleeping...");
             
             // Stop sending data to helmet
             StopDataSending();
@@ -170,7 +172,7 @@ namespace OneView
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Error on sleep: {ex.Message}");
+                    Debug.WriteLine($"❌ Error on sleep: {ex.Message}");
                 }
             });
         }
@@ -182,6 +184,8 @@ namespace OneView
         protected override async void OnResume()
         {
             base.OnResume();
+            
+            Debug.WriteLine("☀️ App resuming...");
             
             // Restart all sensors
             SensorService.StartWatchingBattery();
@@ -200,18 +204,23 @@ namespace OneView
         {
             base.OnStart();
 
+            Debug.WriteLine("🚀 App starting...");
+
             // Check if Bluetooth is available on this device
             if (!BluetoothService.IsBluetoothAvailable())
             {
-                Debug.WriteLine("Bluetooth is not available");
+                Debug.WriteLine("⚠️ Bluetooth is not available");
 
                 // Show alert to user (run on UI thread)
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    await Shell.Current.DisplayAlert(
-                        "Bluetooth Required",
-                        "Please turn on Bluetooth to connect to your helmet.",
-                        "OK");
+                    if (MainPage != null)
+                    {
+                        await MainPage.DisplayAlert(
+                            "Bluetooth Required",
+                            "Please turn on Bluetooth to connect to your helmet.",
+                            "OK");
+                    }
                 });
                 return;
             }
@@ -251,28 +260,32 @@ namespace OneView
                 // Check if already connected (prevents duplicate connections)
                 if (BluetoothService.IsHelmetConnected())
                 {
-                    Debug.WriteLine("Helmet already connected");
+                    Debug.WriteLine("✅ Helmet already connected");
                     StartDataSending();
                     return;
                 }
 
+                Debug.WriteLine("🔍 Scanning for helmets...");
+                
                 // Scan for helmets (looks for devices named "Helmet_01" or "Smarthelm")
                 // Scan duration: 8 seconds
                 List<IDevice> devices = await BluetoothService.ScanForHelmets();
 
                 if (devices == null || devices.Count == 0)
                 {
-                    Debug.WriteLine("No helmets found");
+                    Debug.WriteLine("⚠️ No helmets found");
                     return;
                 }
 
+                Debug.WriteLine($"📡 Found {devices.Count} helmet(s)");
+                
                 // Connect to first helmet found
                 var device = devices[0];
                 bool connected = await BluetoothService.ConnectToHelmet(device);
 
                 if (connected)
                 {
-                    Debug.WriteLine("Connected to helmet - starting data transmission");
+                    Debug.WriteLine("✅ Connected to helmet - starting data transmission");
 
                     // Send initial data immediately
                     await SendDataToHelmetAsync();
@@ -282,12 +295,12 @@ namespace OneView
                 }
                 else
                 {
-                    Debug.WriteLine("Failed to connect to helmet");
+                    Debug.WriteLine("❌ Failed to connect to helmet");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error reconnecting: {ex.Message}");
+                Debug.WriteLine($"❌ Error reconnecting: {ex.Message}");
             }
         }
 
@@ -300,7 +313,7 @@ namespace OneView
             if (_dataSendTimer != null && !_dataSendTimer.Enabled)
             {
                 _dataSendTimer.Start();
-                Debug.WriteLine("Data sending started");
+                Debug.WriteLine("📤 Data sending started (500ms interval)");
             }
         }
 
@@ -313,7 +326,7 @@ namespace OneView
             if (_dataSendTimer != null && _dataSendTimer.Enabled)
             {
                 _dataSendTimer.Stop();
-                Debug.WriteLine("Data sending stopped");
+                Debug.WriteLine("⏸️ Data sending stopped");
             }
         }
 

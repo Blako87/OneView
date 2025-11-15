@@ -36,8 +36,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- App Icon -->
-    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+    <!-- App Icon - Using PNG directly (rename appmyicon.svg to appmyicon.png) -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appmyicon.png" Color="#512BD4" />
 
     <!-- Splash Screen -->
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
@@ -64,12 +64,5 @@
 
   <ItemGroup>
     <Folder Include="Interfaces\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Only compile AppShell and MainPage XAML, remove old view XAML files -->
-    <MauiXaml Update="AppShell.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
   </ItemGroup>
 </Project>

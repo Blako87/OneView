@@ -1,17 +1,39 @@
 ﻿@inherits LayoutComponentBase
+@using OneView.Components.Layout
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<CascadingValue Value="this">
+    <div class="page-container">
+        <main>
+            <div class="top-row px-4">
+                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            </div>
+
+            <div class="content-area">
+                @Body
+            </div>
+        </main>
+
+        <!-- The NavMenu is now a slide-out panel, triggered from Home.razor -->
+        <NavMenu @ref="navMenuInstance" />
     </div>
+</CascadingValue>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+@code {
+    public NavMenu? navMenuInstance;
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    public void ToggleNavMenu()
+    {
+        navMenuInstance?.ToggleMenu();
+    }
+}
+
+<style>
+    .page-container {
+        position: relative;
+        min-height: 100vh;
+    }
+
+    .content-area {
+        width: 100%;
+    }
+</style>

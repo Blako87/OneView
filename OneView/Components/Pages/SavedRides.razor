@@ -1,279 +1,118 @@
 @page "/rides"
 @using OneView.Services
 @using OneView.Models
+@using OneView.Components.Layout
 @implements IDisposable
 
 <PageTitle>Rides</PageTitle>
 
-<div class="rides-page">
-    <!-- Header -->
-    <div class="page-header">
-        <h1 class="page-title">
-            <span class="title-icon">??</span>
-            RIDES
-        </h1>
-        <div class="header-subtitle">Manage Your Bike Sessions</div>
+<div class="rides-container">
+    <!-- Top Navigation Bar -->
+    <div class="nav-bar">
+        <div class="nav-spacer"></div>
+        <button class="nav-btn menu-btn" @onclick="ToggleNavMenu">
+            <span class="menu-icon"><span></span><span></span><span></span></span> <!-- replaced unicode menu with CSS bars -->
+        </button>
     </div>
 
-    <!-- Ride Control Panel -->
-    <div class="control-panel">
-        <div class="control-card">
-            <!-- Ride Status Display -->
-            <div class="ride-status">
-                <div class="status-indicator @(isRideActive ? "active" : "inactive")">
-                    <div class="status-pulse"></div>
-                </div>
-                <div class="status-text">
-                    <div class="status-label">SESSION STATUS</div>
-                    <div class="status-value">@(isRideActive ? "ACTIVE" : "INACTIVE")</div>
+    <!-- Ride Control & Live Data Panel -->
+    <div class="widget-container">
+        <!-- Ride Status Widget -->
+        <div class="widget">
+            <div class="widget-glow"></div>
+            <div class="widget-content">
+                <div class="status-display">
+                    <div class="status-icon @(isRideActive ? "active" : "")"></div>
+                    <div class="status-text">@(isRideActive ? "SESSION ACTIVE" : "SESSION INACTIVE")</div>
                 </div>
             </div>
-
-            <!-- Live Stats (when ride is active) -->
-            @if (isRideActive)
-            {
-                <div class="live-stats">
-                    <div class="stat-item">
-                        <div class="stat-icon">??</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Duration</div>
-                            <div class="stat-value">@rideDuration</div>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">??</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Distance</div>
-                            <div class="stat-value">@rideDistance km</div>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">?</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Avg Speed</div>
-                            <div class="stat-value">@rideAvgSpeed km/h</div>
-                        </div>
-                    </div>
-                    <!-- New: Incline stats smaller widgets -->
-                    <div class="stat-item small">
-                        <div class="stat-icon">??</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Incline L Avg</div>
-                            <div class="stat-value">@rideInclineLeftAvg °</div>
-                        </div>
-                    </div>
-                    <div class="stat-item small">
-                        <div class="stat-icon">??</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Incline L Max</div>
-                            <div class="stat-value">@rideInclineLeftMax °</div>
-                        </div>
-                    </div>
-                    <div class="stat-item small">
-                        <div class="stat-icon">??</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Incline R Avg</div>
-                            <div class="stat-value">@rideInclineRightAvg °</div>
-                        </div>
-                    </div>
-                    <div class="stat-item small">
-                        <div class="stat-icon">??</div>
-                            <div class="stat-content">
-                            <div class="stat-label">Incline R Max</div>
-                            <div class="stat-value">@rideInclineRightMax °</div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                @if (!isRideActive)
-                {
-                    <button class="btn-primary start-btn" @onclick="StartRide">
-                        <span class="btn-icon">??</span>
-                        <span class="btn-text">START RIDE</span>
-                        <div class="btn-glow"></div>
-                    </button>
-                }
-                else
-                {
-                    <button class="btn-danger stop-btn" @onclick="StopRide">
-                        <span class="btn-icon">??</span>
-                        <span class="btn-text">SAVE & STOP</span>
-                        <div class="btn-glow"></div>
-                    </button>
-                }
-
-                <!-- New: Load Saved Ride button -->
-                <button class="btn-secondary" @onclick="LoadAndShowSavedRide">
-                    <span class="btn-icon">??</span>
-                    LOAD SAVED RIDE
-                </button>
-            </div>
+            <div class="widget-label">RIDE STATUS</div>
         </div>
 
-        @if (showLoadedRide && loadedRide is not null)
-        {
-            <div class="loaded-card">
-                <div class="loaded-header">
-                    <div class="loaded-title">
-                        <span class="title-icon">??</span>
-                        Loaded Ride — @loadedRide.DisplayDate
-                    </div>
-                    <button class="btn-secondary compact" @onclick="HideLoadedRide">HIDE</button>
+        <!-- Controls Widget -->
+        <div class="widget">
+            <div class="widget-glow"></div>
+            <div class="widget-content">
+                <div class="action-buttons">
+                    @if (!isRideActive)
+                    {
+                        <button class="action-btn start" @onclick="StartRide">
+                            <span class="icon-circle green"></span> <!-- replaced unsupported emoji with styled circle -->
+                            <span>START RIDE</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="action-btn stop" @onclick="StopRide">
+                            <span class="icon-square red"></span>
+                            <span>STOP & SAVE</span>
+                        </button>
+                    }
                 </div>
+            </div>
+            <div class="widget-label">CONTROLS</div>
+        </div>
 
-                <div class="loaded-grid">
-                    <div class="loaded-metric">
-                        <div class="metric-label">Distance</div>
-                        <div class="metric-value">@loadedRide.DisplayDistance</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Duration</div>
-                        <div class="metric-value">@loadedRide.DisplayDuration</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Avg Speed</div>
-                        <div class="metric-value">@loadedRide.DisplayAvgSpeed</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Max Speed</div>
-                        <div class="metric-value">@loadedRide.DisplayMaxSpeed</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Left Avg</div>
-                        <div class="metric-value">@loadedRide.DisplayAvgInclineLeft</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Left Max</div>
-                        <div class="metric-value">@loadedRide.DisplayMaxInclineLeft</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Right Avg</div>
-                        <div class="metric-value">@loadedRide.DisplayAvgInclineRight</div>
-                    </div>
-                    <div class="loaded-metric">
-                        <div class="metric-label">Right Max</div>
-                        <div class="metric-value">@loadedRide.DisplayMaxInclineRight</div>
+        <!-- Live Data Widget (only when ride is active) -->
+        @if (isRideActive)
+        {
+            <div class="widget live-data-widget">
+                <div class="widget-glow"></div>
+                <div class="widget-content">
+                    <div class="live-metrics">
+                        <div class="live-metric-item">
+                            <div class="live-metric-value">@liveDistance</div>
+                            <div class="live-metric-label">DISTANCE (KM)</div>
+                        </div>
+                        <div class="live-metric-item">
+                            <div class="live-metric-value">@liveDuration</div>
+                            <div class="live-metric-label">DURATION</div>
+                        </div>
+                        <div class="live-metric-item">
+                            <div class="live-metric-value">@liveAvgSpeed</div>
+                            <div class="live-metric-label">AVG SPEED</div>
+                        </div>
                     </div>
                 </div>
+                <div class="widget-label">LIVE METRICS</div>
             </div>
         }
     </div>
 
-    <!-- Rides History -->
+    <!-- Ride History -->
     <div class="history-section">
-        <div class="section-header">
-            <h2 class="section-title">
-                <span class="title-icon">??</span>
-                RIDE HISTORY
-            </h2>
-            @if (hasRides)
-            {
-                <button class="btn-secondary" @onclick="LoadRides">
-                    <span class="btn-icon">??</span>
-                    REFRESH
-                </button>
-            }
-        </div>
-
+        <h2 class="section-title">RIDE HISTORY</h2>
         @if (!hasRides)
         {
-            <div class="empty-state">
-                <div class="empty-icon">??</div>
-                <div class="empty-title">No Rides Yet</div>
-                <div class="empty-message">Start your first ride to track your performance!</div>
+            <div class="widget empty-state">
+                <div class="widget-glow"></div>
+                <div class="widget-content">
+                    <div class="empty-icon">??</div>
+                    <div class="empty-text">No saved rides yet.</div>
+                </div>
+                <div class="widget-label">HISTORY</div>
             </div>
         }
         else
         {
-            <div class="rides-grid">
+            <div class="history-list">
                 @foreach (var ride in rides)
                 {
-                    <div class="ride-card" @onclick="() => ShowRideDetails(ride)">
-                        <div class="ride-card-header">
-                            <div class="ride-date">
-                                <span class="date-icon">??</span>
-                                @ride.DisplayDate
-                            </div>
-                            <div class="ride-badge">COMPLETED</div>
-                        </div>
-
-                        <div class="ride-metrics">
-                            <div class="ride-metric">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">Distance</div>
-                                    <div class="metric-data">@ride.DisplayDistance</div>
-                                </div>
-                            </div>
-
-                            <div class="ride-metric">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">Duration</div>
-                                    <div class="metric-data">@ride.DisplayDuration</div>
-                                </div>
-                            </div>
-
-                            <div class="ride-metric">
-                                <div class="metric-icon">?</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">Avg Speed</div>
-                                    <div class="metric-data">@ride.DisplayAvgSpeed</div>
-                                </div>
-                            </div>
-
-                            <div class="ride-metric">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">Max Speed</div>
-                                    <div class="metric-data">@ride.DisplayMaxSpeed</div>
-                                </div>
-                            </div>
-
-                            <!-- New: incline metrics (smaller) -->
-                            <div class="ride-metric small">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">L Avg</div>
-                                    <div class="metric-data">@ride.DisplayAvgInclineLeft</div>
-                                </div>
-                            </div>
-                            <div class="ride-metric small">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">L Max</div>
-                                    <div class="metric-data">@ride.DisplayMaxInclineLeft</div>
-                                </div>
-                            </div>
-                            <div class="ride-metric small">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">R Avg</div>
-                                    <div class="metric-data">@ride.DisplayAvgInclineRight</div>
-                                </div>
-                            </div>
-                            <div class="ride-metric small">
-                                <div class="metric-icon">??</div>
-                                <div class="metric-info">
-                                    <div class="metric-label">R Max</div>
-                                    <div class="metric-data">@ride.DisplayMaxInclineRight</div>
-                                </div>
+                    <div class="history-item">
+                        <div class="item-icon">??</div>
+                        <div class="item-details">
+                            <div class="item-title">@ride.DisplayDate</div>
+                            <div class="item-subtitle">
+                                @ride.DisplayDistance / @ride.DisplayDuration / @ride.DisplayAvgSpeed
                             </div>
                         </div>
-
-                        <div class="ride-card-footer">
-                            <span class="view-details">View Details ?</span>
-                        </div>
+                        <div class="item-arrow">?</div>
                     </div>
                 }
             </div>
-
             <div class="danger-zone">
                 <button class="btn-clear" @onclick="ClearAllRides">
-                    <span class="btn-icon">???</span>
+                    <span class="icon-circle red"></span> <!-- replaced unsupported emoji with styled red circle -->
                     CLEAR ALL RIDES
                 </button>
             </div>
@@ -285,18 +124,15 @@
     private List<RideHistoryItem> rides = new();
     private bool hasRides = false;
     private bool isRideActive = false;
-    private string rideDuration = "00:00:00";
-    private string rideDistance = "0.00";
-    private string rideAvgSpeed = "0.0";
-    private string rideInclineLeftAvg = "0.0";
-    private string rideInclineLeftMax = "0.0";
-    private string rideInclineRightAvg = "0.0";
-    private string rideInclineRightMax = "0.0";
     private System.Timers.Timer? rideTimer;
 
-    // New: loaded ride panel state
-    private bool showLoadedRide = false;
-    private RideHistoryItem? loadedRide;
+    // Live data fields
+    private string liveDistance = "0.00";
+    private string liveDuration = "00:00:00";
+    private string liveAvgSpeed = "0.0";
+
+    [CascadingParameter]
+    public MainLayout? Layout { get; set; }
 
     protected override void OnInitialized()
     {
@@ -307,6 +143,11 @@
         {
             StartRideTimer();
         }
+    }
+
+    private void ToggleNavMenu()
+    {
+        Layout?.ToggleNavMenu();
     }
 
     private void LoadRides()
@@ -323,12 +164,7 @@
                     Date = profile.LastTime,
                     Distance = profile.Distance,
                     Duration = profile.TimeOnBike,
-                    AverageSpeed = profile.MediumSpeed,
-                    MaxSpeed = profile.MaxSpeed,
-                    MinInclineLeft = profile.MinInclineAngleLeft,
-                    MaxInclineLeft = profile.MaxInclineAngleLeft,
-                    MinInclineRight = profile.MinInclineAngleRight,
-                    MaxInclineRight = profile.MaxInclineAngleRight
+                    AverageSpeed = profile.MediumSpeed
                 };
                 rides.Add(rideItem);
             }
@@ -340,39 +176,6 @@
         {
             System.Diagnostics.Debug.WriteLine($"Error loading rides: {ex.Message}");
         }
-    }
-
-    private async Task LoadAndShowSavedRide()
-    {
-        showLoadedRide = false;
-        loadedRide = null;
-
-        var profile = App.ProfileService.LoadRideData();
-        if (profile != null && profile.Distance > 0)
-        {
-            loadedRide = new RideHistoryItem
-            {
-                Date = profile.LastTime,
-                Distance = profile.Distance,
-                Duration = profile.TimeOnBike,
-                AverageSpeed = profile.MediumSpeed,
-                MaxSpeed = profile.MaxSpeed,
-                MinInclineLeft = profile.MinInclineAngleLeft,
-                MaxInclineLeft = profile.MaxInclineAngleLeft,
-                MinInclineRight = profile.MinInclineAngleRight,
-                MaxInclineRight = profile.MaxInclineAngleRight
-            };
-            showLoadedRide = true;
-        }
-
-        StateHasChanged();
-        await Task.CompletedTask;
-    }
-
-    private void HideLoadedRide()
-    {
-        showLoadedRide = false;
-        loadedRide = null;
     }
 
     private void StartRide()
@@ -395,8 +198,23 @@
     private void StartRideTimer()
     {
         rideTimer = new System.Timers.Timer(1000);
-        rideTimer.Elapsed += async (sender, e) => await UpdateRideStats();
+        rideTimer.Elapsed += async (sender, e) => await UpdateLiveStats();
         rideTimer.Start();
+    }
+
+    private async Task UpdateLiveStats()
+    {
+        await InvokeAsync(() =>
+        {
+            var profile = App.ProfileService?.CurrentRideProfile;
+            if (profile != null)
+            {
+                liveDistance = profile.Distance.ToString("F2");
+                liveDuration = profile.TimeOnBike.ToString(@"hh\:mm\:ss");
+                liveAvgSpeed = profile.MediumSpeed.ToString("F1");
+            }
+            StateHasChanged();
+        });
     }
 
     private void StopRideTimer()
@@ -404,43 +222,6 @@
         rideTimer?.Stop();
         rideTimer?.Dispose();
         rideTimer = null;
-    }
-
-    private async Task UpdateRideStats()
-    {
-        await InvokeAsync(() =>
-        {
-            var profile = App.ProfileService?.CurrentRideProfile;
-            if (profile != null)
-            {
-                rideDuration = profile.TimeOnBike.ToString(@"hh\:mm\:ss");
-                rideDistance = profile.Distance.ToString("F2");
-                rideAvgSpeed = profile.MediumSpeed.ToString("F1");
-                // Compute incline averages from min/max
-                var lmin = Math.Abs(profile.MinInclineAngleLeft);
-                var lmax = Math.Abs(profile.MaxInclineAngleLeft);
-                var rmin = Math.Abs(profile.MinInclineAngleRight);
-                var rmax = Math.Abs(profile.MaxInclineAngleRight);
-                rideInclineLeftAvg = ((lmin + lmax) / 2f).ToString("F1");
-                rideInclineLeftMax = (profile.MaxInclineAngleLeft).ToString("F1");
-                rideInclineRightAvg = ((rmin + rmax) / 2f).ToString("F1");
-                rideInclineRightMax = (profile.MaxInclineAngleRight).ToString("F1");
-            }
-            StateHasChanged();
-        });
-    }
-
-    private async Task ShowRideDetails(RideHistoryItem ride)
-    {
-        var message = $"Date: {ride.Date:MM/dd/yyyy HH:mm}\n\n" +
-                     $"Distance: {ride.Distance:F2} km\n" +
-                     $"Duration: {ride.Duration:hh\\:mm\\:ss}\n" +
-                     $"Average: {ride.AverageSpeed:F1} km/h\n" +
-                     $"Maximum: {ride.MaxSpeed:F1} km/h\n\n" +
-                     $"Incline Left Avg: {ride.AvgInclineLeft:F1}°, Max: {ride.MaxInclineLeft:F1}°\n" +
-                     $"Incline Right Avg: {ride.AvgInclineRight:F1}°, Max: {ride.MaxInclineRight:F1}°";
-        System.Diagnostics.Debug.WriteLine(message);
-        await Task.CompletedTask;
     }
 
     private async Task ClearAllRides()
@@ -464,168 +245,60 @@
         public double Distance { get; set; }
         public TimeSpan Duration { get; set; }
         public double AverageSpeed { get; set; }
-        public double MaxSpeed { get; set; }
-        public double MinInclineLeft { get; set; }
-        public double MaxInclineLeft { get; set; }
-        public double MinInclineRight { get; set; }
-        public double MaxInclineRight { get; set; }
-
-        public double AvgInclineLeft => (Math.Abs(MinInclineLeft) + Math.Abs(MaxInclineLeft)) / 2.0;
-        public double AvgInclineRight => (Math.Abs(MinInclineRight) + Math.Abs(MaxInclineRight)) / 2.0;
 
         public string DisplayDate => Date.ToString("MM/dd/yyyy HH:mm");
         public string DisplayDistance => $"{Distance:F2} km";
         public string DisplayDuration => Duration.ToString(@"hh\:mm\:ss");
         public string DisplayAvgSpeed => $"{AverageSpeed:F1} km/h";
-        public string DisplayMaxSpeed => $"{MaxSpeed:F1} km/h";
-        public string DisplayAvgInclineLeft => $"{AvgInclineLeft:F1}°";
-        public string DisplayAvgInclineRight => $"{AvgInclineRight:F1}°";
-        public string DisplayMaxInclineLeft => $"{MaxInclineLeft:F1}°";
-        public string DisplayMaxInclineRight => $"{MaxInclineRight:F1}°";
     }
 }
 
 <style>
-    .rides-page {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-        padding: 16px; /* smaller */
-        font-family: 'Segoe UI', system-ui, sans-serif;
-    }
+    /* Added new icon styles */
+    .menu-icon { display:flex; flex-direction:column; gap:4px; }
+    .menu-icon span { display:block; width:20px; height:2px; background:#00d4ff; box-shadow:0 0 6px rgba(0,212,255,0.7); border-radius:2px; }
+    .nav-btn:hover .menu-icon span { background:#00ff88; box-shadow:0 0 8px rgba(0,255,136,0.7); }
 
-    /* Header */
-    .page-header {
-        text-align: center;
-        margin-bottom: 28px; /* smaller */
-        padding: 20px; /* smaller */
-    }
+    .icon-circle { display:inline-block; width:16px; height:16px; border-radius:50%; }
+    .icon-square { display:inline-block; width:16px; height:16px; }
+    .icon-circle.green { background:#00ff88; box-shadow:0 0 8px rgba(0,255,136,0.7); }
+    .icon-circle.red { background:#ff4444; box-shadow:0 0 8px rgba(255,68,68,0.7); }
+    .icon-square.red { background:#ff4444; box-shadow:0 0 8px rgba(255,68,68,0.7); }
 
-    .page-title {
-        font-size: 2.2rem; /* smaller */
-        font-weight: 900;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        gap: 14px;
-        letter-spacing: 4px;
-        text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-    }
-
-    .title-icon { font-size: 2.2rem; }
-
-    .header-subtitle {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.9rem; /* smaller */
-        margin-top: 6px;
-        letter-spacing: 1.5px;
-    }
-
-    /* Control Panel */
-    .control-panel { max-width: 900px; margin: 0 auto 36px; }
-
-    .control-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(18px);
-        border-radius: 24px; /* smaller */
-        padding: 28px; /* smaller */
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Ride Status */
-    .ride-status {
-        display: flex;
-        align-items: center;
-        gap: 20px; /* smaller */
-        margin-bottom: 22px; /* smaller */
-        padding: 18px; /* smaller */
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 16px; /* smaller */
-    }
-
-    .status-indicator { width: 48px; height: 48px; }
-    .status-pulse { width: 24px; height: 24px; border-radius: 50%; background: #00ff88; }
-
-    .status-indicator.active { background: rgba(0, 255, 136, 0.2); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
-    .status-indicator.inactive { background: rgba(255, 255, 255, 0.1); }
-
-    .status-text { flex: 1; }
-    .status-label { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
-    .status-value { font-size: 1.4rem; font-weight: 700; color: #fff; }
-
-    /* Live Stats */
-    .live-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px; }
-    .stat-item { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); }
-    .stat-item.small { padding: 10px; }
-    .stat-icon { font-size: 1.4rem; }
-    .stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px; }
-    .stat-value { font-size: 1rem; font-weight: 700; color: #00ff88; font-family: 'Courier New', monospace; }
-
-    /* Loaded Ride Card */
-    .loaded-card { margin-top: 16px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 16px; }
-    .loaded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .loaded-title { color: #fff; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-    .loaded-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-    .loaded-metric { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; }
-    .loaded-metric .metric-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px; }
-    .loaded-metric .metric-value { font-size: 1rem; font-weight: 700; color: #fff; font-family: 'Courier New', monospace; }
-
-    .compact { padding: 8px 12px; font-size: 0.8rem; border-radius: 10px; }
-
-    /* Action Buttons */
-    .action-buttons { display: flex; gap: 14px; }
-    .btn-primary, .btn-danger, .btn-secondary, .btn-clear { position: relative; flex: 1; padding: 16px 24px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 10px; }
-    .start-btn { background: linear-gradient(135deg, #00ff88, #00d4ff); color: #0f0c29; box-shadow: 0 8px 30px rgba(0,255,136,0.35); }
-    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,255,136,0.45); }
-    .stop-btn { background: linear-gradient(135deg, #ff4444, #cc0000); color: #fff; box-shadow: 0 8px 30px rgba(255,68,68,0.35); }
-    .stop-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(255,68,68,0.45); }
-    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px 18px; font-size: 0.85rem; }
-
-    /* History Section */
-    .history-section { max-width: 1200px; margin: 0 auto; }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-    .section-title { font-size: 1.6rem; color: #fff; display: flex; align-items: center; gap: 12px; letter-spacing: 2px; }
-
-    /* Empty State */
-    .empty-state { text-align: center; padding: 60px 30px; background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
-    .empty-icon { font-size: 4rem; margin-bottom: 18px; opacity: 0.6; }
-    .empty-title { font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
-    .empty-message { font-size: 0.95rem; color: rgba(255,255,255,0.6); }
-
-    /* Rides Grid */
-    .rides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; margin-bottom: 30px; }
-    .ride-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 20px; padding: 22px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s ease; }
-    .ride-card:hover { transform: translateY(-6px); border-color: rgba(0,255,136,0.4); box-shadow: 0 12px 36px rgba(0,255,136,0.2); }
-
-    .ride-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .ride-date { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: rgba(255,255,255,0.75); font-weight: 600; }
-    .date-icon { font-size: 1.1rem; }
-    .ride-badge { background: rgba(0,255,136,0.2); color: #00ff88; padding: 4px 12px; border-radius: 16px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; }
-
-    .ride-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
-    .ride-metric { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; }
-    .ride-metric.small { padding: 10px; }
-    .metric-icon { font-size: 1.4rem; }
-    .metric-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 3px; }
-    .metric-data { font-size: 0.95rem; font-weight: 700; color: #fff; font-family: 'Courier New', monospace; }
-
-    .ride-card-footer { text-align: right; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
-    .view-details { color: #00ff88; font-size: 0.85rem; font-weight: 600; }
-
-    /* Danger Zone */
-    .danger-zone { text-align: center; margin-top: 30px; }
-    .btn-clear { background: rgba(255,68,68,0.1); color: #ff4444; border: 2px solid rgba(255,68,68,0.3); padding: 12px 28px; font-size: 0.85rem; border-radius: 12px; }
-    .btn-clear:hover { background: rgba(255,68,68,0.2); border-color: rgba(255,68,68,0.5); }
-
-    /* Animations */
-    @@keyframes pulse-glow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } }
-
-    /* Responsive */
-    @@media (max-width: 768px) {
-        .page-title { font-size: 1.8rem; }
-        .control-card { padding: 20px; }
-        .action-buttons { flex-direction: column; }
-        .rides-grid { grid-template-columns: 1fr; }
-        .live-stats { grid-template-columns: 1fr 1fr; }
-    }
+    /* existing styles remain below */
+    .rides-container { min-height:100vh; background:#0a0e27; padding:16px; font-family:'Segoe UI', -apple-system, sans-serif; }
+    .nav-bar { display:flex; justify-content:flex-end; padding:12px 8px; margin-bottom:20px; }
+    .nav-btn { width:42px; height:42px; background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.25); border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.4rem; color:#00d4ff; }
+    .widget-container { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; max-width:480px; margin:0 auto 28px; }
+    .widget { position:relative; background:rgba(10,20,40,0.5); backdrop-filter:blur(16px); border:1px solid rgba(0,212,255,0.25); border-radius:16px; padding:18px; aspect-ratio:1; overflow:hidden; }
+    .widget-glow { position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%); animation:rotate-glow 20s linear infinite; }
+    .widget-content { position:relative; width:100%; height:calc(100% - 30px); display:flex; align-items:center; justify-content:center; }
+    .widget-label { position:absolute; bottom:12px; left:16px; right:16px; font-size:0.65rem; color:rgba(0,212,255,0.85); text-transform:uppercase; letter-spacing:1.2px; font-weight:700; text-align:center; }
+    .status-display { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .status-icon { width:40px; height:40px; border-radius:50%; background:rgba(255,68,68,0.2); border:2px solid rgba(255,68,68,0.4); transition:all 0.3s ease; }
+    .status-icon.active { background:rgba(0,255,136,0.2); border-color:rgba(0,255,136,0.5); box-shadow:0 0 15px rgba(0,255,136,0.5); animation:pulse-icon 2s ease-in-out infinite; }
+    .status-text { font-size:0.8rem; font-weight:700; color:#fff; letter-spacing:1px; }
+    .action-buttons { display:flex; flex-direction:column; gap:12px; width:100%; }
+    .action-btn { padding:12px; border-radius:10px; border:1px solid; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .action-btn.start { background:rgba(0,255,136,0.15); border-color:rgba(0,255,136,0.5); color:#00ff88; }
+    .action-btn.stop { background:rgba(255,68,68,0.15); border-color:rgba(255,68,68,0.5); color:#ff4444; }
+    .live-data-widget { grid-column:span 2; aspect-ratio:auto; }
+    .live-metrics { display:flex; justify-content:space-around; width:100%; text-align:center; }
+    .live-metric-value { font-size:1.4rem; font-weight:700; color:#00ff88; font-family:'Courier New', monospace; }
+    .live-metric-label { font-size:0.6rem; color:rgba(255,255,255,0.6); text-transform:uppercase; margin-top:4px; }
+    .history-section { max-width:480px; margin:0 auto; }
+    .section-title { font-size:1rem; color:rgba(0,212,255,0.85); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; padding-left:8px; }
+    .empty-state .empty-icon { font-size:3rem; opacity:0.5; }
+    .empty-state .empty-text { margin-top:12px; font-size:0.9rem; color:rgba(255,255,255,0.6); }
+    .history-list { display:flex; flex-direction:column; gap:10px; }
+    .history-item { display:flex; align-items:center; gap:14px; padding:12px; background:rgba(10,20,40,0.5); border:1px solid rgba(0,212,255,0.2); border-radius:10px; }
+    .item-icon { font-size:1.5rem; color:#00d4ff; }
+    .item-details { flex:1; }
+    .item-title { font-size:0.8rem; font-weight:600; color:#fff; }
+    .item-subtitle { font-size:0.7rem; color:rgba(255,255,255,0.6); }
+    .item-arrow { font-size:1.2rem; color:rgba(0,212,255,0.5); }
+    .danger-zone { margin-top:28px; text-align:center; }
+    .btn-clear { background:transparent; border:1px solid rgba(255,68,68,0.4); color:rgba(255,68,68,0.7); padding:10px 20px; border-radius:8px; cursor:pointer; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:8px; }
+    @@keyframes pulse-icon { 0%,100% { transform:scale(1);} 50% { transform:scale(1.08);} }
+    @@keyframes rotate-glow { from { transform:rotate(0deg);} to { transform:rotate(360deg);} }
 </style>
