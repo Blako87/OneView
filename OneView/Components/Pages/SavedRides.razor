@@ -1,0 +1,529 @@
+@page "/rides"
+@using OneView.Services
+@using OneView.Models
+@implements IDisposable
+
+<PageTitle>Rides</PageTitle>
+
+<div class="rides-page">
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="title-icon">??</span>
+            RIDES
+        </h1>
+        <div class="header-subtitle">Manage Your Bike Sessions</div>
+    </div>
+
+    <!-- Ride Control Panel -->
+    <div class="control-panel">
+        <div class="control-card">
+            <!-- Ride Status Display -->
+            <div class="ride-status">
+                <div class="status-indicator @(isRideActive ? "active" : "inactive")">
+                    <div class="status-pulse"></div>
+                </div>
+                <div class="status-text">
+                    <div class="status-label">SESSION STATUS</div>
+                    <div class="status-value">@(isRideActive ? "ACTIVE" : "INACTIVE")</div>
+                </div>
+            </div>
+
+            <!-- Live Stats (when ride is active) -->
+            @if (isRideActive)
+            {
+                <div class="live-stats">
+                    <div class="stat-item">
+                        <div class="stat-icon">??</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value">@rideDuration</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">??</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Distance</div>
+                            <div class="stat-value">@rideDistance km</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">?</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Avg Speed</div>
+                            <div class="stat-value">@rideAvgSpeed km/h</div>
+                        </div>
+                    </div>
+                    <!-- New: Incline stats smaller widgets -->
+                    <div class="stat-item small">
+                        <div class="stat-icon">??</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Incline L Avg</div>
+                            <div class="stat-value">@rideInclineLeftAvg °</div>
+                        </div>
+                    </div>
+                    <div class="stat-item small">
+                        <div class="stat-icon">??</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Incline L Max</div>
+                            <div class="stat-value">@rideInclineLeftMax °</div>
+                        </div>
+                    </div>
+                    <div class="stat-item small">
+                        <div class="stat-icon">??</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Incline R Avg</div>
+                            <div class="stat-value">@rideInclineRightAvg °</div>
+                        </div>
+                    </div>
+                    <div class="stat-item small">
+                        <div class="stat-icon">??</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Incline R Max</div>
+                            <div class="stat-value">@rideInclineRightMax °</div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                @if (!isRideActive)
+                {
+                    <button class="btn-primary start-btn" @onclick="StartRide">
+                        <span class="btn-icon">??</span>
+                        <span class="btn-text">START RIDE</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn-danger stop-btn" @onclick="StopRide">
+                        <span class="btn-icon">??</span>
+                        <span class="btn-text">SAVE & STOP</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Rides History -->
+    <div class="history-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <span class="title-icon">??</span>
+                RIDE HISTORY
+            </h2>
+            @if (hasRides)
+            {
+                <button class="btn-secondary" @onclick="LoadRides">
+                    <span class="btn-icon">??</span>
+                    REFRESH
+                </button>
+            }
+        </div>
+
+        @if (!hasRides)
+        {
+            <div class="empty-state">
+                <div class="empty-icon">??</div>
+                <div class="empty-title">No Rides Yet</div>
+                <div class="empty-message">Start your first ride to track your performance!</div>
+            </div>
+        }
+        else
+        {
+            <div class="rides-grid">
+                @foreach (var ride in rides)
+                {
+                    <div class="ride-card" @onclick="() => ShowRideDetails(ride)">
+                        <div class="ride-card-header">
+                            <div class="ride-date">
+                                <span class="date-icon">??</span>
+                                @ride.DisplayDate
+                            </div>
+                            <div class="ride-badge">COMPLETED</div>
+                        </div>
+
+                        <div class="ride-metrics">
+                            <div class="ride-metric">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">Distance</div>
+                                    <div class="metric-data">@ride.DisplayDistance</div>
+                                </div>
+                            </div>
+
+                            <div class="ride-metric">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">Duration</div>
+                                    <div class="metric-data">@ride.DisplayDuration</div>
+                                </div>
+                            </div>
+
+                            <div class="ride-metric">
+                                <div class="metric-icon">?</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">Avg Speed</div>
+                                    <div class="metric-data">@ride.DisplayAvgSpeed</div>
+                                </div>
+                            </div>
+
+                            <div class="ride-metric">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">Max Speed</div>
+                                    <div class="metric-data">@ride.DisplayMaxSpeed</div>
+                                </div>
+                            </div>
+
+                            <!-- New: incline metrics (smaller) -->
+                            <div class="ride-metric small">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">L Avg</div>
+                                    <div class="metric-data">@ride.DisplayAvgInclineLeft</div>
+                                </div>
+                            </div>
+                            <div class="ride-metric small">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">L Max</div>
+                                    <div class="metric-data">@ride.DisplayMaxInclineLeft</div>
+                                </div>
+                            </div>
+                            <div class="ride-metric small">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">R Avg</div>
+                                    <div class="metric-data">@ride.DisplayAvgInclineRight</div>
+                                </div>
+                            </div>
+                            <div class="ride-metric small">
+                                <div class="metric-icon">??</div>
+                                <div class="metric-info">
+                                    <div class="metric-label">R Max</div>
+                                    <div class="metric-data">@ride.DisplayMaxInclineRight</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ride-card-footer">
+                            <span class="view-details">View Details ?</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="danger-zone">
+                <button class="btn-clear" @onclick="ClearAllRides">
+                    <span class="btn-icon">???</span>
+                    CLEAR ALL RIDES
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<RideHistoryItem> rides = new();
+    private bool hasRides = false;
+    private bool isRideActive = false;
+    private string rideDuration = "00:00:00";
+    private string rideDistance = "0.00";
+    private string rideAvgSpeed = "0.0";
+    private string rideInclineLeftAvg = "0.0";
+    private string rideInclineLeftMax = "0.0";
+    private string rideInclineRightAvg = "0.0";
+    private string rideInclineRightMax = "0.0";
+    private System.Timers.Timer? rideTimer;
+
+    protected override void OnInitialized()
+    {
+        LoadRides();
+        isRideActive = App.ProfileService?.IsRideActive ?? false;
+
+        if (isRideActive)
+        {
+            StartRideTimer();
+        }
+    }
+
+    private void LoadRides()
+    {
+        try
+        {
+            rides.Clear();
+            var profile = App.ProfileService.LoadRideData();
+
+            if (profile != null && profile.Distance > 0)
+            {
+                var rideItem = new RideHistoryItem
+                {
+                    Date = profile.LastTime,
+                    Distance = profile.Distance,
+                    Duration = profile.TimeOnBike,
+                    AverageSpeed = profile.MediumSpeed,
+                    MaxSpeed = profile.MaxSpeed,
+                    MinInclineLeft = profile.MinInclineAngleLeft,
+                    MaxInclineLeft = profile.MaxInclineAngleLeft,
+                    MinInclineRight = profile.MinInclineAngleRight,
+                    MaxInclineRight = profile.MaxInclineAngleRight
+                };
+                rides.Add(rideItem);
+            }
+
+            hasRides = rides.Count > 0;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading rides: {ex.Message}");
+        }
+    }
+
+    private void StartRide()
+    {
+        App.ProfileService?.StartRide();
+        isRideActive = true;
+        StartRideTimer();
+        StateHasChanged();
+    }
+
+    private void StopRide()
+    {
+        App.ProfileService?.StopRide();
+        isRideActive = false;
+        StopRideTimer();
+        LoadRides();
+        StateHasChanged();
+    }
+
+    private void StartRideTimer()
+    {
+        rideTimer = new System.Timers.Timer(1000);
+        rideTimer.Elapsed += async (sender, e) => await UpdateRideStats();
+        rideTimer.Start();
+    }
+
+    private void StopRideTimer()
+    {
+        rideTimer?.Stop();
+        rideTimer?.Dispose();
+        rideTimer = null;
+    }
+
+    private async Task UpdateRideStats()
+    {
+        await InvokeAsync(() =>
+        {
+            var profile = App.ProfileService?.CurrentRideProfile;
+            if (profile != null)
+            {
+                rideDuration = profile.TimeOnBike.ToString(@"hh\:mm\:ss");
+                rideDistance = profile.Distance.ToString("F2");
+                rideAvgSpeed = profile.MediumSpeed.ToString("F1");
+                // Compute incline averages from min/max
+                var lmin = Math.Abs(profile.MinInclineAngleLeft);
+                var lmax = Math.Abs(profile.MaxInclineAngleLeft);
+                var rmin = Math.Abs(profile.MinInclineAngleRight);
+                var rmax = Math.Abs(profile.MaxInclineAngleRight);
+                rideInclineLeftAvg = ((lmin + lmax) / 2f).ToString("F1");
+                rideInclineLeftMax = (profile.MaxInclineAngleLeft).ToString("F1");
+                rideInclineRightAvg = ((rmin + rmax) / 2f).ToString("F1");
+                rideInclineRightMax = (profile.MaxInclineAngleRight).ToString("F1");
+            }
+            StateHasChanged();
+        });
+    }
+
+    private async Task ShowRideDetails(RideHistoryItem ride)
+    {
+        var message = $"Date: {ride.Date:MM/dd/yyyy HH:mm}\n\n" +
+                     $"Distance: {ride.Distance:F2} km\n" +
+                     $"Duration: {ride.Duration:hh\\:mm\\:ss}\n" +
+                     $"Average: {ride.AverageSpeed:F1} km/h\n" +
+                     $"Maximum: {ride.MaxSpeed:F1} km/h\n\n" +
+                     $"Incline Left Avg: {ride.AvgInclineLeft:F1}°, Max: {ride.MaxInclineLeft:F1}°\n" +
+                     $"Incline Right Avg: {ride.AvgInclineRight:F1}°, Max: {ride.MaxInclineRight:F1}°";
+        System.Diagnostics.Debug.WriteLine(message);
+        await Task.CompletedTask;
+    }
+
+    private async Task ClearAllRides()
+    {
+        App.ProfileService?.ClearRideData();
+        var saveService = new Services.SaveprofileData();
+        saveService.ClearAllData();
+        LoadRides();
+        System.Diagnostics.Debug.WriteLine("All rides cleared");
+        await Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        StopRideTimer();
+    }
+
+    public class RideHistoryItem
+    {
+        public DateTime Date { get; set; }
+        public double Distance { get; set; }
+        public TimeSpan Duration { get; set; }
+        public double AverageSpeed { get; set; }
+        public double MaxSpeed { get; set; }
+        public double MinInclineLeft { get; set; }
+        public double MaxInclineLeft { get; set; }
+        public double MinInclineRight { get; set; }
+        public double MaxInclineRight { get; set; }
+
+        public double AvgInclineLeft => (Math.Abs(MinInclineLeft) + Math.Abs(MaxInclineLeft)) / 2.0;
+        public double AvgInclineRight => (Math.Abs(MinInclineRight) + Math.Abs(MaxInclineRight)) / 2.0;
+
+        public string DisplayDate => Date.ToString("MM/dd/yyyy HH:mm");
+        public string DisplayDistance => $"{Distance:F2} km";
+        public string DisplayDuration => Duration.ToString(@"hh\:mm\:ss");
+        public string DisplayAvgSpeed => $"{AverageSpeed:F1} km/h";
+        public string DisplayMaxSpeed => $"{MaxSpeed:F1} km/h";
+        public string DisplayAvgInclineLeft => $"{AvgInclineLeft:F1}°";
+        public string DisplayAvgInclineRight => $"{AvgInclineRight:F1}°";
+        public string DisplayMaxInclineLeft => $"{MaxInclineLeft:F1}°";
+        public string DisplayMaxInclineRight => $"{MaxInclineRight:F1}°";
+    }
+}
+
+<style>
+    .rides-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        padding: 16px; /* smaller */
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 28px; /* smaller */
+        padding: 20px; /* smaller */
+    }
+
+    .page-title {
+        font-size: 2.2rem; /* smaller */
+        font-weight: 900;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .title-icon { font-size: 2.2rem; }
+
+    .header-subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem; /* smaller */
+        margin-top: 6px;
+        letter-spacing: 1.5px;
+    }
+
+    /* Control Panel */
+    .control-panel { max-width: 900px; margin: 0 auto 36px; }
+
+    .control-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(18px);
+        border-radius: 24px; /* smaller */
+        padding: 28px; /* smaller */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Ride Status */
+    .ride-status {
+        display: flex;
+        align-items: center;
+        gap: 20px; /* smaller */
+        margin-bottom: 22px; /* smaller */
+        padding: 18px; /* smaller */
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px; /* smaller */
+    }
+
+    .status-indicator { width: 48px; height: 48px; }
+    .status-pulse { width: 24px; height: 24px; border-radius: 50%; background: #00ff88; }
+
+    .status-indicator.active { background: rgba(0, 255, 136, 0.2); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
+    .status-indicator.inactive { background: rgba(255, 255, 255, 0.1); }
+
+    .status-text { flex: 1; }
+    .status-label { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+    .status-value { font-size: 1.4rem; font-weight: 700; color: #fff; }
+
+    /* Live Stats */
+    .live-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat-item { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); }
+    .stat-item.small { padding: 10px; }
+    .stat-icon { font-size: 1.4rem; }
+    .stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 1rem; font-weight: 700; color: #00ff88; font-family: 'Courier New', monospace; }
+
+    /* Action Buttons */
+    .action-buttons { display: flex; gap: 14px; }
+    .btn-primary, .btn-danger, .btn-secondary, .btn-clear { position: relative; flex: 1; padding: 16px 24px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .start-btn { background: linear-gradient(135deg, #00ff88, #00d4ff); color: #0f0c29; box-shadow: 0 8px 30px rgba(0,255,136,0.35); }
+    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,255,136,0.45); }
+    .stop-btn { background: linear-gradient(135deg, #ff4444, #cc0000); color: #fff; box-shadow: 0 8px 30px rgba(255,68,68,0.35); }
+    .stop-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(255,68,68,0.45); }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px 18px; font-size: 0.85rem; }
+
+    /* History Section */
+    .history-section { max-width: 1200px; margin: 0 auto; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .section-title { font-size: 1.6rem; color: #fff; display: flex; align-items: center; gap: 12px; letter-spacing: 2px; }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 30px; background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
+    .empty-icon { font-size: 4rem; margin-bottom: 18px; opacity: 0.6; }
+    .empty-title { font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .empty-message { font-size: 0.95rem; color: rgba(255,255,255,0.6); }
+
+    /* Rides Grid */
+    .rides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; margin-bottom: 30px; }
+    .ride-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 20px; padding: 22px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s ease; }
+    .ride-card:hover { transform: translateY(-6px); border-color: rgba(0,255,136,0.4); box-shadow: 0 12px 36px rgba(0,255,136,0.2); }
+
+    .ride-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .ride-date { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: rgba(255,255,255,0.75); font-weight: 600; }
+    .date-icon { font-size: 1.1rem; }
+    .ride-badge { background: rgba(0,255,136,0.2); color: #00ff88; padding: 4px 12px; border-radius: 16px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; }
+
+    .ride-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
+    .ride-metric { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+    .ride-metric.small { padding: 10px; }
+    .metric-icon { font-size: 1.4rem; }
+    .metric-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 3px; }
+    .metric-data { font-size: 0.95rem; font-weight: 700; color: #fff; font-family: 'Courier New', monospace; }
+
+    .ride-card-footer { text-align: right; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .view-details { color: #00ff88; font-size: 0.85rem; font-weight: 600; }
+
+    /* Danger Zone */
+    .danger-zone { text-align: center; margin-top: 30px; }
+    .btn-clear { background: rgba(255,68,68,0.1); color: #ff4444; border: 2px solid rgba(255,68,68,0.3); padding: 12px 28px; font-size: 0.85rem; border-radius: 12px; }
+    .btn-clear:hover { background: rgba(255,68,68,0.2); border-color: rgba(255,68,68,0.5); }
+
+    /* Animations */
+    @@keyframes pulse-glow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .page-title { font-size: 1.8rem; }
+        .control-card { padding: 20px; }
+        .action-buttons { flex-direction: column; }
+        .rides-grid { grid-template-columns: 1fr; }
+        .live-stats { grid-template-columns: 1fr 1fr; }
+    }
+</style>

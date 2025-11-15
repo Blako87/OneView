@@ -2,15 +2,38 @@
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:OneView"
+             xmlns:converters="clr-namespace:OneView.Converters"
              x:Class="OneView.App">
     <Application.Resources>
         <ResourceDictionary>
 
-        <!--
-            For information about styling .NET MAUI pages
-            please refer to the documentation:
-            https://go.microsoft.com/fwlink/?linkid=2282329
-        -->
+            <!-- Register Value Converters -->
+            <converters:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+            <converters:BoolToHelmetConverter x:Key="BoolToHelmetConverter"/>
+            <converters:BoolToStatusColorConverter x:Key="BoolToStatusColorConverter"/>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+
+            <!-- Global Colors -->
+            <Color x:Key="Primary">#3498DB</Color>
+            <Color x:Key="Secondary">#2ECC71</Color>
+            <Color x:Key="Tertiary">#E74C3C</Color>
+            <Color x:Key="White">White</Color>
+            <Color x:Key="Black">Black</Color>
+            <Color x:Key="Gray100">#F5F7FA</Color>
+            <Color x:Key="Gray200">#E0E0E0</Color>
+            <Color x:Key="Gray300">#BDBDBD</Color>
+            <Color x:Key="Gray400">#95A5A6</Color>
+            <Color x:Key="Gray500">#7F8C8D</Color>
+            <Color x:Key="Gray600">#2C3E50</Color>
+
+            <!-- Global Styles -->
+            <Style TargetType="Frame">
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="Shadow">
+                    <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.1"/>
+                </Setter>
+            </Style>
 
         </ResourceDictionary>
     </Application.Resources>

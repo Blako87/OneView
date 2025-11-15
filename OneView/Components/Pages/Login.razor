@@ -1,0 +1,484 @@
+@page "/login"
+@using OneView.Services
+@using OneView.Models
+
+<PageTitle>Login - OneView</PageTitle>
+
+<div class="login-page">
+    <div class="login-container">
+        
+        <!-- Animated Background -->
+        <div class="bg-animation">
+            <div class="glow-orb orb-1"></div>
+            <div class="glow-orb orb-2"></div>
+            <div class="glow-orb orb-3"></div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-card">
+            
+            <!-- Logo -->
+            <div class="logo-section">
+                <div class="logo-icon">?</div>
+                <h1 class="logo-text">ONEVIEW</h1>
+                <div class="logo-tagline">Next-Gen Bike Tracking System</div>
+            </div>
+
+            <!-- Error Message -->
+            @if (showError)
+            {
+                <div class="error-alert">
+                    <span class="alert-icon">??</span>
+                    <span class="alert-text">@errorMessage</span>
+                </div>
+            }
+
+            <!-- Login Form -->
+            <div class="form-section">
+                
+                <div class="input-group">
+                    <div class="input-icon">??</div>
+                    <input type="text" 
+                           @bind="username" 
+                           placeholder="Username"
+                           class="form-input" 
+                           disabled="@isLoading" />
+                    <div class="input-underline"></div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-icon">??</div>
+                    <input type="password" 
+                           @bind="password" 
+                           placeholder="Password"
+                           class="form-input"
+                           disabled="@isLoading" />
+                    <div class="input-underline"></div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-icon">??</div>
+                    <input type="email" 
+                           @bind="email" 
+                           placeholder="Email (optional)"
+                           class="form-input"
+                           disabled="@isLoading" />
+                    <div class="input-underline"></div>
+                </div>
+
+                <button class="login-button" @onclick="HandleLogin" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <div class="button-spinner"></div>
+                        <span>AUTHENTICATING...</span>
+                    }
+                    else
+                    {
+                        <span class="button-icon">??</span>
+                        <span>LAUNCH SESSION</span>
+                    }
+                    <div class="button-glow"></div>
+                </button>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="card-footer">
+                <div class="footer-text">&copy; 2024 OneView Technologies</div>
+                <div class="footer-version">v1.0.0</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private string email = string.Empty;
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    private bool showError = false;
+
+    [Inject]
+    private NavigationManager? Navigation { get; set; }
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            ShowErrorMessage("Please enter username and password");
+            return;
+        }
+
+        isLoading = true;
+        showError = false;
+        StateHasChanged();
+
+        try
+        {
+            await Task.Delay(500); // Simulate authentication delay
+
+            bool success = App.LoginService.Login(username, password, email);
+
+            if (success)
+            {
+                System.Diagnostics.Debug.WriteLine($"? Login successful for user: {username}");
+                Navigation?.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                ShowErrorMessage("Authentication failed. Please check your credentials.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"? Login error: {ex.Message}");
+            ShowErrorMessage($"System Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowErrorMessage(string message)
+    {
+        errorMessage = message;
+        showError = true;
+        StateHasChanged();
+    }
+}
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .login-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        padding: 20px;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .login-container {
+        position: relative;
+        width: 100%;
+        max-width: 480px;
+    }
+
+    /* Animated Background */
+    .bg-animation {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+    .glow-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.3;
+        animation: float 8s ease-in-out infinite;
+    }
+
+    .orb-1 {
+        width: 300px;
+        height: 300px;
+        background: #00ff88;
+        top: -100px;
+        left: -100px;
+        animation-delay: 0s;
+    }
+
+    .orb-2 {
+        width: 250px;
+        height: 250px;
+        background: #00d4ff;
+        bottom: -80px;
+        right: -80px;
+        animation-delay: 2s;
+    }
+
+    .orb-3 {
+        width: 200px;
+        height: 200px;
+        background: #a855f7;
+        top: 50%;
+        left: 50%;
+        animation-delay: 4s;
+    }
+
+    /* Login Card */
+    .login-card {
+        position: relative;
+        z-index: 1;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border-radius: 30px;
+        padding: 50px 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Logo Section */
+    .logo-section {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .logo-icon {
+        font-size: 4rem;
+        margin-bottom: 15px;
+        animation: rotate-slow 8s linear infinite;
+        display: inline-block;
+    }
+
+    .logo-text {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 5px;
+        margin-bottom: 10px;
+        text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+    }
+
+    .logo-tagline {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    /* Error Alert */
+    .error-alert {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 20px;
+        background: rgba(255, 68, 68, 0.1);
+        border: 2px solid rgba(255, 68, 68, 0.3);
+        border-radius: 15px;
+        margin-bottom: 30px;
+        animation: shake 0.5s ease;
+    }
+
+    .alert-icon {
+        font-size: 1.5rem;
+    }
+
+    .alert-text {
+        color: #ff4444;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Form Section */
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .input-group {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.3rem;
+        z-index: 1;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 18px 20px 18px 60px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(0, 255, 136, 0.5);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+    }
+
+    .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .form-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .input-underline {
+        position: absolute;
+        bottom: 0;
+        left: 60px;
+        right: 20px;
+        height: 2px;
+        background: linear-gradient(90deg, #00ff88, #00d4ff);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
+
+    .form-input:focus + .input-underline {
+        transform: scaleX(1);
+    }
+
+    /* Login Button */
+    .login-button {
+        position: relative;
+        width: 100%;
+        padding: 20px;
+        margin-top: 15px;
+        background: linear-gradient(135deg, #00ff88, #00d4ff);
+        border: none;
+        border-radius: 15px;
+        color: #0f0c29;
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+    }
+
+    .login-button:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5);
+    }
+
+    .login-button:active:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    .login-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .button-icon {
+        font-size: 1.3rem;
+    }
+
+    .button-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .login-button:active:not(:disabled) .button-glow {
+        width: 400px;
+        height: 400px;
+    }
+
+    .button-spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(15, 12, 41, 0.2);
+        border-top-color: #0f0c29;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    /* Card Footer */
+    .card-footer {
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .footer-text {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.75rem;
+    }
+
+    .footer-version {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.7rem;
+        font-family: 'Courier New', monospace;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+
+    /* Animations */
+    @@keyframes float {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+        }
+        33% {
+            transform: translate(30px, -30px) scale(1.1);
+        }
+        66% {
+            transform: translate(-20px, 20px) scale(0.9);
+        }
+    }
+
+    @@keyframes rotate-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .login-card {
+            padding: 40px 30px;
+        }
+
+        .logo-text {
+            font-size: 2rem;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+        }
+    }
+</style>
