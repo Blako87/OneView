@@ -36,14 +36,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- App Icon - Using PNG directly (rename appmyicon.svg to appmyicon.png) -->
+    <!-- App Icon - Using PNG foreground on SVG background -->
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appmyicon.png" Color="#512BD4" />
 
-    <!-- Splash Screen -->
-    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+    <!-- Splash Screen - Using dedicated splash image -->
+    <MauiSplashScreen Include="Resources\Splash\mysplash.png" Color="#000000" IconColor="#FFFFFF" BaseSize="128,128" Resize="true"/>
 
     <!-- Images -->
-    <MauiImage Include="Resources\Images\*" />
+    <MauiImage Include="Resources\Images\Splash\*" />
     <MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
 
     <!-- Custom Fonts -->
