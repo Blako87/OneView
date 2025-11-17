@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Sdk Name="Microsoft.NET.Sdk.Razor" />
   <PropertyGroup>
-    <!-- Re-enable cross-platform TFMs for .NET9 MAUI -->
-    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Re-enable cross-platform TFMs for .NET10 MAUI -->
+    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst;net10.0-windows10.0.19041.0</TargetFrameworks>
 
     <OutputType>Exe</OutputType>
     <RootNamespace>OneView</RootNamespace>
@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <!-- Enable unsafe blocks only for the Windows target to satisfy CsWinRT1030 when passing generic WinRT interfaces -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-windows10.0.19041.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -40,7 +40,7 @@
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appmyicon.png" Color="#512BD4" />
 
     <!-- Splash Screen - Using dedicated splash image -->
-    <MauiSplashScreen Include="Resources\Splash\mysplash.png" Color="#000000" IconColor="#FFFFFF" BaseSize="128,128" Resize="true"/>
+    <MauiSplashScreen Include="Resources\Splash\mysplash.png" Color="#000000" IconColor="#FFFFFF" BaseSize="128,128" Resize="true" />
 
     <!-- Images -->
     <MauiImage Include="Resources\Images\Splash\*" />
@@ -54,11 +54,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.120" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
     <PackageReference Include="Plugin.BLE" Version="3.2.0" />
   </ItemGroup>
 

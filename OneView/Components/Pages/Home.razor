@@ -1,12 +1,11 @@
 ﻿@page "/"
-@using OneView.Services
-@using OneView.Models
+@using OneView.ViewModels
 @using OneView.Components.Layout
 @implements IDisposable
 
 <PageTitle>OneView Dashboard</PageTitle>
 
-@if (!isLoggedIn)
+@if (!_viewModel.IsLoggedIn)
 {
     <div class="login-redirect">
         <div class="spinner"></div>
@@ -16,7 +15,7 @@
 else
 {
     <div class="dashboard">
-        <!-- Top Navigation Bar - Back arrow removed -->
+        <!-- Top Navigation Bar -->
         <div class="nav-bar">
             <div class="nav-spacer"></div>
             <button class="nav-btn menu-btn" @onclick="ToggleNavMenu">
@@ -37,7 +36,7 @@ else
                         <div class="orb-ring ring-2"></div>
                         <div class="orb-core">
                             <div class="speed-display">
-                                <div class="speed-value">@sensorData?.SpeedKmh.ToString("F0")</div>
+                                <div class="speed-value">@_viewModel.Speed.ToString("F0")</div>
                                 <div class="speed-unit">km/h</div>
                             </div>
                         </div>
@@ -52,7 +51,7 @@ else
                 <div class="widget-content">
                     <div class="duration-display">
                         <span class="duration-icon">⏱️</span>
-                        <div class="duration-value">@rideDuration</div>
+                        <div class="duration-value">@_viewModel.TimeOnBike</div>
                         <div class="duration-label">TIME ON BIKE</div>
                     </div>
                 </div>
@@ -69,7 +68,7 @@ else
                         <span class="climate-icon bolt">⚡</span>
                         <span class="climate-icon">🔍</span>
                     </div>
-                    <div class="climate-temp">@sensorData?.BatteryPercent.ToString("F0")% - BATTERY</div>
+                    <div class="climate-temp">@_viewModel.BatteryPercent.ToString("F0")% - BATTERY</div>
                 </div>
                 <div class="widget-label">POWER STATUS</div>
             </div>
@@ -79,10 +78,10 @@ else
                 <div class="widget-glow"></div>
                 <div class="widget-content">
                     <div class="status-grid single">
-                        <div class="status-icon @(isHelmetConnected ? "active" : "")">📡</div>
+                        <div class="status-icon @(_viewModel.IsHelmetConnected ? "active" : "")">📡</div>
                     </div>
                 </div>
-                <div class="widget-label">@(isHelmetConnected ? "DEVICE CONNECTED" : "NO DEVICE")</div>
+                <div class="widget-label">@(_viewModel.IsHelmetConnected ? "DEVICE CONNECTED" : "NO DEVICE")</div>
             </div>
 
             <!-- ROW 3 -->
@@ -93,60 +92,68 @@ else
                     <div class="incline-display">
                         <div class="incline-item">
                             <div class="incline-label">LEFT</div>
-                            <div class="incline-value">@sensorData?.InclineAngleDegLeft.ToString("F1")°</div>
+                            <div class="incline-value">@_viewModel.InclineLeft.ToString("F1")°</div>
                         </div>
                         <div class="incline-item">
                             <div class="incline-label">RIGHT</div>
-                            <div class="incline-value">@sensorData?.InclineAngleDegRight.ToString("F1")°</div>
+                            <div class="incline-value">@_viewModel.InclineRight.ToString("F1")°</div>
                         </div>
                     </div>
                 </div>
                 <div class="widget-label">INCLINE ANGLES</div>
             </div>
 
-            <!-- Widget 3,2: Graph/Chart -->
+            <!-- Widget 3,2: Ride Stats -->
             <div class="widget">
                 <div class="widget-glow"></div>
-                <div class="widget-content chart-content">
-                    <svg class="chart-svg" viewBox="0 0 280 100" preserveAspectRatio="none">
-                        <polyline class="chart-line" points="@GetChartPoints()" />
-                        <polyline class="chart-fill" points="@GetChartPoints()" />
-                    </svg>
-                    <div class="chart-label">INCLINE</div>
+                <div class="widget-content stats-content">
+                    <div class="stat-item">
+                        <div class="stat-label">AVG</div>
+                        <div class="stat-value">@_viewModel.MediumSpeed.ToString("F1")</div>
+                        <div class="stat-unit">km/h</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-label">MAX</div>
+                        <div class="stat-value">@_viewModel.MaxSpeed.ToString("F1")</div>
+                        <div class="stat-unit">km/h</div>
+                    </div>
                 </div>
-                <div class="widget-label">TILT +@(Math.Abs(sensorData?.InclineAngleDegLeft ?? 0).ToString("F0"))° TODAY</div>
+                <div class="widget-label">SPEED STATS</div>
             </div>
 
             <!-- ROW 4 -->
-            <!-- Widget 4,1: Feed/Notifications -->
+            <!-- Widget 4,1: Distance & Bluetooth -->
             <div class="widget">
                 <div class="widget-glow"></div>
                 <div class="widget-content device-status-summary">
                     <div class="device-status-block">
-                        <div class="device-status-icon @(devicesFound > 0 ? "found" : "not-found")">📡</div>
-                        <div class="device-status-text">
-                            <div class="device-status-title">DEVICE SCAN</div>
-                            <div class="device-status-value">@(devicesFound > 0 ? $"{devicesFound} FOUND" : "NONE FOUND")</div>
+                        <div class="distance-display">
+                            <div class="distance-value">@_viewModel.Distance.ToString("F2")</div>
+                            <div class="distance-unit">KM</div>
                         </div>
                     </div>
-                    <div class="device-status-inline">STATUS: <span class="@(devicesFound > 0 ? "txt-found" : "txt-not-found")">@(devicesFound > 0 ? "ACTIVE" : "IDLE")</span></div>
-                </div>
-                <div class="widget-label">DEVICE DISCOVERY</div>
-            </div>
-
-            <!-- Widget 4,2: Health/Heart -->
-            <div class="widget">
-                <div class="widget-glow"></div>
-                <div class="widget-content health-content">
-                    <div class="health-circle">
-                        <svg viewBox="0 0 160 160" class="health-svg">
-                            <circle cx="80" cy="80" r="55" class="health-ring"/>
-                            <circle cx="80" cy="80" r="55" class="health-pulse-ring"/>
-                        </svg>
-                        <div class="health-heart">❤️</div>
+                    <div class="device-status-inline">
+                        BT: <span class="@(_viewModel.IsBluetoothOn ? "txt-found" : "txt-not-found")">
+                            @(_viewModel.IsBluetoothOn ? "ON" : "OFF")
+                        </span> • 
+                        Packets: @_viewModel.PacketsSent
                     </div>
                 </div>
-                <div class="widget-label">OPTIMAL</div>
+                <div class="widget-label">DISTANCE & BT</div>
+            </div>
+
+            <!-- Widget 4,2: Ride Control -->
+            <div class="widget">
+                <div class="widget-glow"></div>
+                <div class="widget-content">
+                    <button class="ride-control-btn @(_viewModel.IsRideActive ? "stop" : "start")" 
+                            @onclick="_viewModel.ToggleRideCommand.Execute">
+                        <span class="control-icon">@(_viewModel.IsRideActive ? "⏹️" : "▶️")</span>
+                        <span class="control-text">@_viewModel.RideButtonText</span>
+                    </button>
+                </div>
+                <div class="widget-label">RIDE CONTROL</div>
             </div>
 
         </div>
@@ -154,20 +161,7 @@ else
 }
 
 @code {
-    private Sensordata? sensorData;
-    private bool isBluetoothOn;
-    private bool isHelmetConnected;
-    private int dataSentCount;
-    private int devicesFound;
-    private System.Timers.Timer? refreshTimer;
-    private bool isLoggedIn = false;
-    private bool isRideActive = false;
-    private string rideDuration = "00:00:00";
-
-    private double hourAngle => DateTime.Now.Hour % 12 * 30 + DateTime.Now.Minute * 0.5;
-    private double minuteAngle => DateTime.Now.Minute * 6;
-
-    private List<double> chartData = new();
+    private MainViewModel _viewModel = new();
 
     [Inject]
     private NavigationManager? Navigation { get; set; }
@@ -175,26 +169,23 @@ else
     [CascadingParameter]
     public MainLayout? Layout { get; set; }
 
+    private bool IsLoggedIn => App.LoginService?.IsLoggedIn() ?? false;
+
     protected override void OnInitialized()
     {
-        isLoggedIn = App.LoginService?.IsLoggedIn() ?? false;
-
-        if (!isLoggedIn)
+        // Check login and redirect if needed
+        if (!IsLoggedIn)
         {
             Navigation?.NavigateTo("/login");
             return;
         }
 
-        // Initialize chart data
-        for (int i = 0; i < 20; i++)
+        // Subscribe to property changes for UI updates
+        // InvokeAsync ensures StateHasChanged runs on UI thread
+        _viewModel.PropertyChanged += async (s, e) =>
         {
-            chartData.Add(50 + Random.Shared.Next(-20, 20));
-        }
-
-        refreshTimer = new System.Timers.Timer(100);
-        refreshTimer.Elapsed += async (sender, e) => await RefreshData();
-        refreshTimer.AutoReset = true;
-        refreshTimer.Start();
+            await InvokeAsync(StateHasChanged);
+        };
     }
 
     private void ToggleNavMenu()
@@ -202,48 +193,9 @@ else
         Layout?.ToggleNavMenu();
     }
 
-    private async Task RefreshData()
-    {
-        await InvokeAsync(() =>
-        {
-            sensorData = App.SensorService.CurrentSensorData;
-            isBluetoothOn = App.BluetoothService.IsBluetoothAvailable();
-            isHelmetConnected = App.BluetoothService.IsHelmetConnected();
-            dataSentCount = App.BluetoothService.DataSentCount;
-            devicesFound = App.BluetoothService.DevicesFoundDuringScan;
-            isRideActive = App.ProfileService.IsRideActive;
-
-            if (isRideActive)
-            {
-                rideDuration = App.ProfileService.CurrentRideProfile.TimeOnBike.ToString(@"hh\:mm\:ss");
-            }
-
-            // Update chart with incline
-            chartData.RemoveAt(0);
-            chartData.Add(50 + (sensorData?.InclineAngleDegLeft ?? 0) * 3);
-
-            StateHasChanged();
-        });
-    }
-
-    private string GetChartPoints()
-    {
-        var points = new List<string>();
-        for (int i = 0; i < chartData.Count; i++)
-        {
-            double x = i * 14;
-            double y = chartData[i];
-            points.Add($"{x},{y}");
-        }
-        points.Add("280,100");
-        points.Add("0,100");
-        return string.Join(" ", points);
-    }
-
     public void Dispose()
     {
-        refreshTimer?.Stop();
-        refreshTimer?.Dispose();
+        _viewModel?.Dispose();
     }
 }
 
@@ -612,160 +564,125 @@ else
         font-weight: 700;
     }
 
-    /* Device Status Summary Widget */
-    .device-status-summary {
+    /* Stats Content Widget */
+    .stats-content {
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 10px;
+    }
+
+    .stat-item {
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
-        text-align: center;
-    }
-
-    .device-status-summary {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-        padding: 6px 4px;
-    }
-
-    .device-status-block {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: rgba(0, 212, 255, 0.05);
-        border: 1px solid rgba(0, 212, 255, 0.25);
-        border-radius: 10px;
-        padding: 10px 12px;
-    }
-
-    .device-status-icon {
-        width: 46px;
-        height: 46px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.6rem;
-        border-radius: 50%;
-        background: rgba(0, 212, 255, 0.08);
-        border: 1px solid rgba(0, 212, 255, 0.3);
-        transition: box-shadow 0.3s;
-    }
-
-    .device-status-icon.found {
-        background: rgba(0, 255, 136, 0.15);
-        border-color: rgba(0, 255, 136, 0.5);
-        box-shadow: 0 0 14px rgba(0, 255, 136, 0.4);
-    }
-
-    .device-status-icon.not-found {
-        background: rgba(255, 68, 68, 0.15);
-        border-color: rgba(255, 68, 68, 0.45);
-        box-shadow: 0 0 14px rgba(255, 68, 68, 0.35);
-    }
-
-    .device-status-text {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
         gap: 4px;
     }
 
-    .device-status-title {
+    .stat-label {
         font-size: 0.6rem;
-        color: rgba(0, 212, 255, 0.75);
-        font-weight: 700;
+        color: rgba(0, 212, 255, 0.7);
+        text-transform: uppercase;
         letter-spacing: 1px;
+        font-weight: 700;
     }
 
-    .device-status-value {
-        font-size: 0.9rem;
+    .stat-value {
+        font-size: 1.8rem;
         font-weight: 700;
         color: #00ff88;
+        text-shadow: 0 0 12px rgba(0, 255, 136, 0.7);
         font-family: 'Courier New', monospace;
-        text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
     }
 
-    .device-status-inline {
+    .stat-unit {
         font-size: 0.55rem;
-        color: rgba(255, 255, 255, 0.55);
-        letter-spacing: 1px;
-        font-weight: 600;
-        text-align: center;
+        color: rgba(0, 212, 255, 0.6);
         text-transform: uppercase;
     }
 
-    .txt-found { color:#00ff88; text-shadow:0 0 6px rgba(0,255,136,0.6); }
-    .txt-not-found { color:#ff4444; text-shadow:0 0 6px rgba(255,68,68,0.6); }
-
-    /* Health Widget */
-    .health-content {
-        padding: 10px;
+    .stat-divider {
+        width: 1px;
+        height: 60%;
+        background: linear-gradient(to bottom, transparent, rgba(0, 212, 255, 0.3), transparent);
     }
 
-    .health-circle {
-        position: relative;
-        width: 120px;
-        height: 120px;
+    /* Distance Display */
+    .distance-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 0;
     }
 
-    .health-svg {
+    .distance-value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #00ff88;
+        text-shadow: 0 0 16px rgba(0, 255, 136, 0.8);
+        font-family: 'Courier New', monospace;
+        line-height: 1;
+    }
+
+    .distance-unit {
+        font-size: 0.7rem;
+        color: rgba(0, 212, 255, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-top: 4px;
+    }
+
+    /* Ride Control Button */
+    .ride-control-btn {
         width: 100%;
-        height: 100%;
+        height: 80%;
+        background: rgba(0, 212, 255, 0.1);
+        border: 2px solid rgba(0, 212, 255, 0.3);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
 
-    .health-ring {
-        fill: none;
-        stroke: rgba(0, 212, 255, 0.25);
-        stroke-width: 2;
+    .ride-control-btn.start {
+        border-color: rgba(0, 255, 136, 0.5);
+        background: rgba(0, 255, 136, 0.1);
     }
 
-    .health-pulse-ring {
-        fill: none;
-        stroke: #00ff88;
-        stroke-width: 2;
-        animation: pulse-health 2.5s ease-in-out infinite;
+    .ride-control-btn.start:hover {
+        border-color: rgba(0, 255, 136, 0.8);
+        background: rgba(0, 255, 136, 0.2);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
     }
 
-    .health-heart {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 2.8rem;
-        filter: drop-shadow(0 0 12px rgba(255, 100, 100, 0.7));
+    .ride-control-btn.stop {
+        border-color: rgba(255, 68, 68, 0.5);
+        background: rgba(255, 68, 68, 0.1);
     }
 
-    /* Animations */
-    @@keyframes float-glow {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-25px); }
+    .ride-control-btn.stop:hover {
+        border-color: rgba(255, 68, 68, 0.8);
+        background: rgba(255, 68, 68, 0.2);
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
     }
 
-    @@keyframes rotate-glow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+    .control-icon {
+        font-size: 2rem;
+        filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
     }
 
-    @@keyframes orbit {
-        from { transform: translate(-50%, -50%) rotate(0deg); }
-        to { transform: translate(-50%, -50%) rotate(360deg); }
+    .control-text {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.9);
     }
-
-    @@keyframes pulse-icon {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.08); }
-    }
-
-    @@keyframes pulse-health {
-        0%, 100% { r: 55; opacity: 1; }
-        50% { r: 60; opacity: 0.6; }
-    }
-
-    @@keyframes pulse-found {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-
+    
     /* Login Redirect */
     .login-redirect {
         display: flex;

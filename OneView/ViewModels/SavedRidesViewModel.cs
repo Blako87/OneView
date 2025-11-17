@@ -10,8 +10,12 @@ namespace OneView.ViewModels
     /// ViewModel for the Saved Rides page
     /// Displays ride history and allows viewing ride details
     /// </summary>
-    public partial class SavedRidesViewModel : ObservableObject
+    public partial class SavedRidesViewModel : ObservableObject, IDisposable
     {
+        private System.Timers.Timer? _rideTimer;
+
+        #region Observable Properties
+
         [ObservableProperty]
         private ObservableCollection<RideHistoryItem> rides = new();
 
@@ -19,11 +23,46 @@ namespace OneView.ViewModels
         private bool hasRides = false;
 
         [ObservableProperty]
-        private RideHistoryItem? selectedRide;
+        private bool isRideActive = false;
+
+        [ObservableProperty]
+        private int? expandedRideId = null;
+
+        // Live data properties
+        [ObservableProperty]
+        private string liveDistance = "0.00";
+
+        [ObservableProperty]
+        private string liveDuration = "00:00:00";
+
+        [ObservableProperty]
+        private string liveAvgSpeed = "0.0";
+
+        [ObservableProperty]
+        private string liveMinInclineLeft = "0.0";
+
+        [ObservableProperty]
+        private string liveMaxInclineLeft = "0.0";
+
+        [ObservableProperty]
+        private string liveMinInclineRight = "0.0";
+
+        [ObservableProperty]
+        private string liveMaxInclineRight = "0.0";
+
+        #endregion
 
         public SavedRidesViewModel()
         {
             LoadRides();
+            IsRideActive = App.ProfileService?.IsRideActive ?? false;
+
+            if (IsRideActive)
+            {
+                StartRideTimer();
+            }
+
+            Debug.WriteLine("? SavedRidesViewModel initialized");
         }
 
         /// <summary>
@@ -36,13 +75,13 @@ namespace OneView.ViewModels
             {
                 Rides.Clear();
 
-                // Load the most recent ride profile
                 var profile = App.ProfileService.LoadRideData();
 
                 if (profile != null && profile.Distance > 0)
                 {
                     var rideItem = new RideHistoryItem
                     {
+                        Id = 1,
                         Date = profile.LastTime,
                         Distance = profile.Distance,
                         Duration = profile.TimeOnBike,
@@ -58,40 +97,111 @@ namespace OneView.ViewModels
                 }
 
                 HasRides = Rides.Count > 0;
-                Debug.WriteLine($" Loaded {Rides.Count} ride(s)");
+                Debug.WriteLine($"?? Loaded {Rides.Count} ride(s)");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($" Error loading rides: {ex.Message}");
+                Debug.WriteLine($"? Error loading rides: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Shows details of the selected ride
+        /// Toggles the expanded state of a ride item
         /// </summary>
         [RelayCommand]
-        private async Task ViewRideDetails(RideHistoryItem ride)
+        private void ToggleRideDetails(RideHistoryItem ride)
         {
-            if (ride == null) return;
-
-            await Shell.Current.DisplayAlert(
-                $"Fahrt vom {ride.Date:dd.MM.yyyy}",
-                $" Distanz: {ride.Distance:F2} km\n" +
-                $" Dauer: {ride.Duration:hh\\:mm\\:ss}\n" +
-                $" Durchschn.: {ride.AverageSpeed:F1} km/h\n" +
-                $" Max: {ride.MaxSpeed:F1} km/h\n\n" +
-                $"Neigung Links: {ride.MinInclineLeft:F1}° - {ride.MaxInclineLeft:F1}°\n" +
-                $"Neigung Rechts: {ride.MinInclineRight:F1}° - {ride.MaxInclineRight:F1}°",
-                "OK");
+            if (ExpandedRideId == ride.Id)
+            {
+                ExpandedRideId = null;
+            }
+            else
+            {
+                ExpandedRideId = ride.Id;
+            }
         }
 
         /// <summary>
-        /// Clears all saved rides
+        /// Starts a new ride tracking session
+        /// </summary>
+        [RelayCommand]
+        private void StartRide()
+        {
+            App.ProfileService?.StartRide();
+            IsRideActive = true;
+            StartRideTimer();
+            Debug.WriteLine("?? Ride started from SavedRidesViewModel");
+        }
+
+        /// <summary>
+        /// Stops the current ride and saves data
+        /// </summary>
+        [RelayCommand]
+        private void StopRide()
+        {
+            App.ProfileService?.StopRide();
+            IsRideActive = false;
+            StopRideTimer();
+            LoadRides();
+            Debug.WriteLine("?? Ride stopped from SavedRidesViewModel");
+        }
+
+        /// <summary>
+        /// Starts the timer for live data updates
+        /// </summary>
+        private void StartRideTimer()
+        {
+            _rideTimer = new System.Timers.Timer(1000);
+            _rideTimer.Elapsed += (sender, e) => UpdateLiveStats();
+            _rideTimer.Start();
+            Debug.WriteLine("?? Live stats timer started");
+        }
+
+        /// <summary>
+        /// Stops the live data timer
+        /// </summary>
+        private void StopRideTimer()
+        {
+            _rideTimer?.Stop();
+            _rideTimer?.Dispose();
+            _rideTimer = null;
+            Debug.WriteLine("?? Live stats timer stopped");
+        }
+
+        /// <summary>
+        /// Updates live statistics from the current ride profile
+        /// </summary>
+        private void UpdateLiveStats()
+        {
+            try
+            {
+                var profile = App.ProfileService?.CurrentRideProfile;
+                if (profile != null)
+                {
+                    LiveDistance = profile.Distance.ToString("F2");
+                    LiveDuration = profile.TimeOnBike.ToString(@"hh\:mm\:ss");
+                    LiveAvgSpeed = profile.MediumSpeed.ToString("F1");
+                    LiveMinInclineLeft = profile.MinInclineAngleLeft.ToString("F1");
+                    LiveMaxInclineLeft = profile.MaxInclineAngleLeft.ToString("F1");
+                    LiveMinInclineRight = profile.MinInclineAngleRight.ToString("F1");
+                    LiveMaxInclineRight = profile.MaxInclineAngleRight.ToString("F1");
+
+                    Debug.WriteLine($"?? Live stats updated: Distance={LiveDistance}km, Duration={LiveDuration}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"? Error updating live stats: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Clears all saved rides after confirmation
         /// </summary>
         [RelayCommand]
         private async Task ClearAllRides()
         {
-            bool confirm = await Shell.Current.DisplayAlert(
+            bool confirm = await Shell.Current.DisplayAlertAsync(
                 "Löschen bestätigen",
                 "Möchten Sie alle gespeicherten Fahrten löschen?",
                 "Ja",
@@ -99,14 +209,23 @@ namespace OneView.ViewModels
 
             if (confirm)
             {
-                App.ProfileService.ClearRideData();
+                App.ProfileService?.ClearRideData();
                 var saveService = new Services.SaveprofileData();
                 saveService.ClearAllData();
-                
+
                 LoadRides();
-                
-                await Shell.Current.DisplayAlert("Gelöscht", "Alle Fahrten wurden gelöscht.", "OK");
+                ExpandedRideId = null;
+
+                Debug.WriteLine("??? All rides cleared");
+
+                await Shell.Current.DisplayAlertAsync("Gelöscht", "Alle Fahrten wurden gelöscht.", "OK");
             }
+        }
+
+        public void Dispose()
+        {
+            StopRideTimer();
+            Debug.WriteLine("?? SavedRidesViewModel disposed");
         }
     }
 
@@ -115,6 +234,7 @@ namespace OneView.ViewModels
     /// </summary>
     public class RideHistoryItem
     {
+        public int Id { get; set; }
         public DateTime Date { get; set; }
         public double Distance { get; set; }
         public TimeSpan Duration { get; set; }
@@ -128,7 +248,6 @@ namespace OneView.ViewModels
         public string DisplayDate => Date.ToString("dd.MM.yyyy HH:mm");
         public string DisplayDistance => $"{Distance:F2} km";
         public string DisplayDuration => Duration.ToString(@"hh\:mm\:ss");
-        public string DisplayAvgSpeed => $"Ø {AverageSpeed:F1} km/h";
-        public string DisplayMaxSpeed => $"Max {MaxSpeed:F1} km/h";
+        public string DisplayAvgSpeed => $"? {AverageSpeed:F1} km/h";
     }
 }

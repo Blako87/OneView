@@ -65,6 +65,7 @@ namespace OneView
         /// Application constructor - Initializes all services and UI
         /// Called once when app first launches
         /// </summary>
+       
         public App()
         {
             InitializeComponent();
@@ -73,10 +74,7 @@ namespace OneView
             SensorService = new SensorService();
             ProfileService = new ProfileService();
             LoginService = new LoginService();
-            
-            // Use MainPage for Blazor hosting
-            MainPage = new MainPage();
-
+                       
             // Setup timer for periodic Bluetooth data transmission
             SetupDataSendTimer();
             
@@ -85,6 +83,10 @@ namespace OneView
             Debug.WriteLine($"✅ App initialized. Login restored: {wasLoggedIn}");
             
             // Blazor routing will handle navigation to login or home page based on isLoggedIn
+        }
+        protected override Window CreateWindow(IActivationState? activationState)
+        {
+                return new Window(new MainPage());
         }
 
         /// <summary>
@@ -214,12 +216,16 @@ namespace OneView
                 // Show alert to user (run on UI thread)
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    if (MainPage != null)
+                    if (Windows.Count > 0)
                     {
-                        await MainPage.DisplayAlert(
-                            "Bluetooth Required",
-                            "Please turn on Bluetooth to connect to your helmet.",
-                            "OK");
+                        var page = Current?.Windows[0].Page;
+                        if (page != null)
+                        {
+                            await page.DisplayAlertAsync(
+                                "Bluetooth Required",
+                                "Please turn on Bluetooth to connect to your helmet.",
+                                "OK");
+                        }
                     }
                 });
                 return;

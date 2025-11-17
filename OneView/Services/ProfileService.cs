@@ -11,6 +11,7 @@ namespace OneView.Services
     /// </summary>
     public class ProfileService
     {
+        public event EventHandler<Rideprofile>? RideProfileUpdated;
         // Current ride profile being tracked
         public Rideprofile CurrentRideProfile { get; private set; } = new();
         
@@ -31,6 +32,11 @@ namespace OneView.Services
 
         // Update interval in milliseconds (1 second for smoother distance updates)
         private const int UpdateIntervalMs = 1000;
+
+        private void NotifyRideProfileUpdated()
+        {
+            RideProfileUpdated?.Invoke(this, CurrentRideProfile);
+        }
 
         /// <summary>
         /// Starts tracking a new bike ride
@@ -170,6 +176,8 @@ namespace OneView.Services
 
                 // Recalculate average speed
                 UpdateMediumSpeed();
+                // Notify any subscribers that the ride profile has been updated
+                NotifyRideProfileUpdated();
 
                 Debug.WriteLine($"📊 Ride Update: +{distanceThisInterval:F3}km, Total={CurrentRideProfile.Distance:F2}km, Speed={speedKmh:F1}km/h, Max={CurrentRideProfile.MaxSpeed:F1}km/h");
             }
@@ -263,6 +271,8 @@ namespace OneView.Services
             {
                 CurrentRideProfile.MaxInclineAngleRight = rightAngle;
             }
+
+            Debug.WriteLine($"🔄 Incline Updated - L:[{CurrentRideProfile.MinInclineAngleLeft:F1}° to {CurrentRideProfile.MaxInclineAngleLeft:F1}°] R:[{CurrentRideProfile.MinInclineAngleRight:F1}° to {CurrentRideProfile.MaxInclineAngleRight:F1}°]");
         }
 
         /// <summary>

@@ -83,16 +83,23 @@ namespace OneView.ViewModels
         [ObservableProperty]
         private string rideButtonIcon = "??";
 
+        /// <summary>
+        /// Indicates whether the user is logged in
+        /// </summary>
+        public bool IsLoggedIn => App.LoginService?.IsLoggedIn() ?? false;
+
         #endregion
 
         public MainViewModel()
         {
             // Load username
             Username = App.LoginService.GetUsername();
+            App.SensorService.SensorDataUpdated += OnSensorDataUpdated;
+            App.ProfileService.RideProfileUpdated += OnProfileDataUpdated;
 
-            // Start auto-refresh timer (every 200ms for smooth UI updates)
-            _refreshTimer = new System.Timers.Timer(200);
-            _refreshTimer.Elapsed += (s, e) => RefreshData();
+            // Start auto-refresh timer (every 1000ms for smooth UI updates)
+            _refreshTimer = new System.Timers.Timer(1000);
+            _refreshTimer.Elapsed += (s, e) => RefreshNonEventData();
             _refreshTimer.AutoReset = true;
             _refreshTimer.Start();
 
@@ -103,45 +110,101 @@ namespace OneView.ViewModels
         /// Refreshes all data from services
         /// Called automatically every 200ms
         /// </summary>
-        private void RefreshData()
+        private void OnSensorDataUpdated(object? sender, Sensordata sensorData)
         {
             try
             {
                 // Get sensor data
-                var sensorData = App.SensorService.CurrentSensorData;
-                Speed = sensorData.SpeedKmh;
-                BatteryPercent = sensorData.BatteryPercent;
-                InclineLeft = sensorData.InclineAngleDegLeft;
-                InclineRight = sensorData.InclineAngleDegRight;
 
-                // Get ride profile data
-                var profile = App.ProfileService.CurrentRideProfile;
-                Distance = profile.Distance;
-                MediumSpeed = profile.MediumSpeed;
-                MaxSpeed = profile.MaxSpeed;
-                MinInclineLeft = profile.MinInclineAngleLeft;
-                MaxInclineLeft = profile.MaxInclineAngleLeft;
-                MinInclineRight = profile.MinInclineAngleRight;
-                MaxInclineRight = profile.MaxInclineAngleRight;
-                TimeOnBike = App.ProfileService.GetRideDurationFormatted();
+                if (Math.Abs(speed - sensorData.SpeedKmh) > 0.1)
+                {
+                    Speed = sensorData.SpeedKmh;
+                }
 
-                // Get Bluetooth status
-                IsBluetoothOn = App.BluetoothService.IsBluetoothAvailable();
-                IsHelmetConnected = App.BluetoothService.IsHelmetConnected();
-                PacketsSent = App.BluetoothService.DataSentCount;
-                
-                var lastTime = App.BluetoothService.LastDataSentTime;
-                LastTransmission = lastTime?.ToString("HH:mm:ss") ?? "Nie";
+                if (Math.Abs(batteryPercent - sensorData.BatteryPercent) > 0.1)
+                {
+                    BatteryPercent = sensorData.BatteryPercent;
+                }
 
-                // Update ride status
-                IsRideActive = App.ProfileService.IsRideActive;
-                UpdateRideButtonState();
+                if (Math.Abs(inclineLeft - sensorData.InclineAngleDegLeft) > 0.1)
+                {
+                    InclineLeft = sensorData.InclineAngleDegLeft;
+                }
+
+                if (Math.Abs(inclineRight - sensorData.InclineAngleDegRight) > 0.1)
+                {
+                    InclineRight = sensorData.InclineAngleDegRight;
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"? Error refreshing data: {ex.Message}");
             }
         }
+
+        private void OnProfileDataUpdated(object? sender, Rideprofile profile)
+        {
+            // Get ride profile data
+            try
+            {
+                if (Math.Abs(Distance - profile.Distance) > 0.1)
+                {
+                    Distance = profile.Distance;
+                }
+
+                if (Math.Abs(MediumSpeed - profile.MediumSpeed) > 0.1)
+                {
+                    MediumSpeed = profile.MediumSpeed;
+                }
+
+                if (Math.Abs(MaxSpeed - profile.MaxSpeed) > 0.1)
+                {
+                    MaxSpeed = profile.MaxSpeed;
+                }
+
+                if (Math.Abs(MinInclineLeft - profile.MinInclineAngleLeft) > 0.1)
+                {
+                    MinInclineLeft = profile.MinInclineAngleLeft;
+                }
+
+                if (Math.Abs(MaxInclineLeft - profile.MaxInclineAngleLeft) > 0.1)
+                {
+                    MaxInclineLeft = profile.MaxInclineAngleLeft;
+                }
+
+                if (Math.Abs(MinInclineRight - profile.MinInclineAngleRight) > 0.1)
+                {
+                    MinInclineRight = profile.MinInclineAngleRight;
+                }
+
+                if (Math.Abs(MaxInclineRight - profile.MaxInclineAngleRight) > 0.1)
+                {
+                    MaxInclineRight = profile.MaxInclineAngleRight;
+                }
+
+                TimeOnBike = App.ProfileService.GetRideDurationFormatted();
+                // Update ride status
+                IsRideActive = App.ProfileService.IsRideActive;
+                UpdateRideButtonState();
+
+            }
+
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"? Error refreshing data: {ex.Message}");
+            }
+        }
+        private void RefreshNonEventData()
+        {
+            // Get Bluetooth status
+            IsBluetoothOn = App.BluetoothService.IsBluetoothAvailable();
+            IsHelmetConnected = App.BluetoothService.IsHelmetConnected();
+            PacketsSent = App.BluetoothService.DataSentCount;
+
+            var lastTime = App.BluetoothService.LastDataSentTime;
+            LastTransmission = lastTime?.ToString("HH:mm:ss") ?? "Nie";
+        }
+
 
         /// <summary>
         /// Updates the ride button text and icon based on ride state
@@ -164,7 +227,7 @@ namespace OneView.ViewModels
         /// Toggles ride tracking (start/stop)
         /// </summary>
         [RelayCommand]
-        private async Task ToggleRide()
+        private void ToggleRide()
         {
             try
             {
@@ -172,23 +235,18 @@ namespace OneView.ViewModels
                 {
                     // Stop ride
                     bool saved = App.ProfileService.StopRide();
-                    
+
                     if (saved)
                     {
-                        await Shell.Current.DisplayAlert(
-                            "Fahrt Beendet",
-                            $"Distanz: {Distance:F2} km\n" +
-                            $"Dauer: {TimeOnBike}\n" +
-                            $"Durchschn.: {MediumSpeed:F1} km/h\n" +
-                            $"Max: {MaxSpeed:F1} km/h",
-                            "OK");
+                        // Ride stopped successfully - data is saved
+                        Debug.WriteLine($"? Ride saved: Distance={Distance:F2}km, Duration={TimeOnBike}, AvgSpeed={MediumSpeed:F1}km/h");
                     }
                 }
                 else
                 {
                     // Start ride
                     App.ProfileService.StartRide();
-                    Debug.WriteLine("? Ride started");
+                    Debug.WriteLine("?? Ride started from MainViewModel");
                 }
 
                 UpdateRideButtonState();
@@ -196,7 +254,6 @@ namespace OneView.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"? Error toggling ride: {ex.Message}");
-                await Shell.Current.DisplayAlert("Fehler", ex.Message, "OK");
             }
         }
 
@@ -204,24 +261,19 @@ namespace OneView.ViewModels
         /// Navigates to saved rides page
         /// </summary>
         [RelayCommand]
-        private async Task ViewSavedRides()
+        private void ViewSavedRides()
         {
-            await Shell.Current.GoToAsync("///SavedRidesPage");
+            // This command is not used in Blazor - navigation happens via NavMenu
+            Debug.WriteLine("ViewSavedRides command called (not implemented for Blazor)");
         }
 
         /// <summary>
         /// Logs out the user and returns to login page
         /// </summary>
         [RelayCommand]
-        private async Task Logout()
+        private void Logout()
         {
-            bool confirm = await Shell.Current.DisplayAlert(
-                "Abmelden",
-                "Möchten Sie sich wirklich abmelden?",
-                "Ja",
-                "Nein");
-
-            if (confirm)
+            try
             {
                 // Stop active ride if running
                 if (IsRideActive)
@@ -232,13 +284,18 @@ namespace OneView.ViewModels
                 // Logout
                 App.LoginService.Logout();
 
-                // Navigate to login
-                await Shell.Current.GoToAsync("///LoginPage");
+                Debug.WriteLine("? User logged out from MainViewModel");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"? Error during logout: {ex.Message}");
             }
         }
 
         public void Dispose()
         {
+            App.SensorService.SensorDataUpdated -= OnSensorDataUpdated;
+            App.ProfileService.RideProfileUpdated -= OnProfileDataUpdated;
             _refreshTimer?.Stop();
             _refreshTimer?.Dispose();
             Debug.WriteLine("?? MainViewModel disposed");

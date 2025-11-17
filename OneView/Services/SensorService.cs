@@ -12,6 +12,7 @@ namespace OneView.Services
     /// </summary>
     public class SensorService
     {
+        public event EventHandler<Sensordata>? SensorDataUpdated;
         // Live sensor data accessible to the entire app
         // Updated automatically as sensor events fire
         public Sensordata CurrentSensorData { get; private set; } = new();
@@ -25,6 +26,10 @@ namespace OneView.Services
         private float lastRoll;        // Previous roll angle for delta calculation
         private float leftIncline;     // Current left tilt angle
         private float rightIncline;    // Current right tilt angle
+        private void NotifySensorDataUpdated()
+        {
+            SensorDataUpdated?.Invoke(this, CurrentSensorData);
+        }                           
 
         #region Battery Monitoring
 
@@ -71,6 +76,7 @@ namespace OneView.Services
             // Convert decimal charge level to percentage (0.85 → 85%)
             float currentLevel = (float)(e.ChargeLevel * 100);
             CurrentSensorData.UpdateBattery(currentLevel);
+            NotifySensorDataUpdated();
         }
 
         #endregion
@@ -162,6 +168,7 @@ namespace OneView.Services
             
             // Update sensor data with new incline angles
             CurrentSensorData.UpdateInclineAngle(leftIncline, rightIncline);
+            NotifySensorDataUpdated();
         }
 
         #endregion
@@ -301,6 +308,7 @@ namespace OneView.Services
                         // Formula: km/h = m/s × 3.6
                         float speedKmh = (float)(e.Location.Speed.Value * 3.6);
                         CurrentSensorData.UpdateGps(speedKmh);
+                        NotifySensorDataUpdated();
                         
                         Debug.WriteLine($"📍 GPS: Speed={speedKmh:F1} km/h, Accuracy={e.Location.Accuracy:F1}m");
                     }
